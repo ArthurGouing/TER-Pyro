@@ -13,7 +13,7 @@ CXX_FLAGS = $(DEBUG_FLAG)
 PROG = run
 
 # Les fichiers source à compiler
-SRC = main.cc TimeScheme.cpp FiniteVolume.cpp DataFile.cpp Function.cpp
+SRC = main.cc MeshAdapt.cpp TimeScheme.cpp FiniteVolume.cpp DataFile.cpp Function.cpp
 
 # La commande complète : compile seulement si un fichier a été modifié
 $(PROG) : $(SRC)
