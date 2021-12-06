@@ -23,11 +23,16 @@ void FiniteVolume::Build_flux_mat()
 	int Ny= _df->Get_Ny();
 	double dt = _df->Get_dt();
 	double dx = _df->Get_dx();
-	double dy = _df->Get_dy();
-	double sigma = _df->Get_sigma(), Fx, Fy;
+	VectorXd Dy=_adm->Get_Dy();
+	double sigma = _df->Get_sigma(), Fx;
+	VectorXd 	Fy(Ny);
 	_mat_flux.resize(Nx*Ny,Nx*Ny);
 	Fx=1./pow(dx,2);
-	Fy=1./pow(dy,2);
+	
+	for (int i=0; i<Ny ; i++)
+	{
+		Fy(i)=1./pow(Dy(i),2);
+	}
 
 	for (int j=1; j<=Ny; ++j)
 	{
@@ -44,10 +49,10 @@ void FiniteVolume::Build_flux_mat()
 	{
 		for (int k=1; k<=Ny-1; ++k) //on se balade suivant les arrêtes suivant une colonne
 		{
-			triplets.push_back({i+(k-1)*Nx-1,i+(k-1)*Nx-1,Fy});
-			triplets.push_back({i+(k-1)*Nx-1,i+(k-1)*Nx+Nx-1,-Fy});
-			triplets.push_back({i+(k-1)*Nx+Nx-1,i+(k-1)*Nx+Nx-1,Fy});
-			triplets.push_back({i+(k-1)*Nx+Nx-1,i+(k-1)*Nx-1,-Fy});
+			triplets.push_back({i+(k-1)*Nx-1,i+(k-1)*Nx-1,Fy(k-1)});
+			triplets.push_back({i+(k-1)*Nx-1,i+(k-1)*Nx+Nx-1,-Fy(k-1)});
+			triplets.push_back({i+(k-1)*Nx+Nx-1,i+(k-1)*Nx+Nx-1,Fy(k)});
+			triplets.push_back({i+(k-1)*Nx+Nx-1,i+(k-1)*Nx-1,-Fy(k)});
 		}
 	}
 	_mat_flux.setFromTriplets(triplets.begin(), triplets.end());
@@ -66,7 +71,7 @@ void FiniteVolume::Build_BC_RHS(const double& t) //Validé
 	int Nx=_df->Get_Nx();
 	int Ny= _df->Get_Ny();
 	double dx = _df->Get_dx();
-	double dy = _df->Get_dy();
+	VectorXd Dy=_adm->Get_Dy();
 	double xmin = _df->Get_xmin();
 	double ymin = _df->Get_ymin();
 	double ppv = _df->Get_ppv();
@@ -79,7 +84,7 @@ void FiniteVolume::Build_BC_RHS(const double& t) //Validé
 	}
 	for (int i=Nx*Ny-Nx; i<=Nx*Ny-1; i++)
 	{
-		_BC_RHS(i)=(1./(ppv*cpv*dy))*_fct->SourceFunction(t);
+		_BC_RHS(i)=(1./(ppv*cpv*Dy(i)))*_fct->SourceFunction(t);
 	}
 
 	// cout << "-------------------------------" << endl;

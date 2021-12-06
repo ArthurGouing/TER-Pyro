@@ -12,6 +12,7 @@ private:
 	Eigen::VectorXd _BC_RHS;
 	Function* _fct;
 	DataFile* _df;
+	//Adapt_maillage* _adm;
 	//Vecteur solution exacte
   	Eigen::VectorXd _solexact;
 
