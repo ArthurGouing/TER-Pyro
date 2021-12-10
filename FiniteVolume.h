@@ -12,13 +12,13 @@ private:
 	Eigen::VectorXd _BC_RHS;
 	Function* _fct;
 	DataFile* _df;
-	//Adapt_maillage* _adm;
+	//Mesh_Adapt* _adm;
 	//Vecteur solution exacte
   	Eigen::VectorXd _solexact;
 
 public:
 	// Constructeur
-	FiniteVolume(Function* function, DataFile* data_file);
+	FiniteVolume(Function* function, DataFile* data_file/*, Mesh_Adapt * adapt_mesh*/);
 	void Build_flux_mat();
 	void Build_BC_RHS(const double& t);
 	Eigen::VectorXd ExactSolution(double t);

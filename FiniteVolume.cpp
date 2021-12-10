@@ -7,8 +7,8 @@ using namespace std;
 using namespace Eigen;
 
 // Constructeur
-FiniteVolume::FiniteVolume(Function* function, DataFile* data_file) :
-_fct(function), _df(data_file) //il faut mettre en entré le truc p.5
+FiniteVolume::FiniteVolume(Function* function, DataFile* data_file /*,Mesh_Adapt * adapt_mesh*/) :
+_fct(function), _df(data_file)  /*_adm(adpat_mesh)*///il faut mettre en entré le truc p.5
 {
 	Build_flux_mat();
 }
@@ -23,12 +23,12 @@ void FiniteVolume::Build_flux_mat()
 	int Ny= _df->Get_Ny();
 	double dt = _df->Get_dt();
 	double dx = _df->Get_dx();
-	VectorXd Dy=_adm->Get_Dy();
+	VectorXd Dy;//_adm->Get_Dy();
 	double sigma = _df->Get_sigma(), Fx;
 	VectorXd 	Fy(Ny);
 	_mat_flux.resize(Nx*Ny,Nx*Ny);
 	Fx=1./pow(dx,2);
-	
+
 	for (int i=0; i<Ny ; i++)
 	{
 		Fy(i)=1./pow(Dy(i),2);
@@ -71,7 +71,7 @@ void FiniteVolume::Build_BC_RHS(const double& t) //Validé
 	int Nx=_df->Get_Nx();
 	int Ny= _df->Get_Ny();
 	double dx = _df->Get_dx();
-	VectorXd Dy=_adm->Get_Dy();
+	VectorXd Dy;//_adm->Get_Dy();
 	double xmin = _df->Get_xmin();
 	double ymin = _df->Get_ymin();
 	double ppv = _df->Get_ppv();
