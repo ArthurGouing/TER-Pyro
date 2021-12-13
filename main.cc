@@ -19,10 +19,14 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   double nb_iterations=data_file->Get__nb_iterations();
   // Pointeur contenant toutes les fonctions utiles
   Function* function = new Function(data_file);
+  // Pointeur vers la classe MeshAdapt (adaptation de maillage) //!!!!!
+  cout << "constructeur"<<endl;
+  Mesh_Adapt* mesh_adapt = new Mesh_Adapt(data_file); //!!!!
   // Pointeur vers la classe FiniteVolume (discrétisation en espace)
-  FiniteVolume* fin_vol = new FiniteVolume(function, data_file);
+  FiniteVolume* fin_vol = new FiniteVolume(function, data_file, mesh_adapt);
   // Pointeur vers la classe TimeScheme (discrétisation en temps=)
   TimeScheme* time_scheme = NULL;
+
   Eigen::VectorXd sol;
   double tn;
 
@@ -70,12 +74,17 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   solu2 << 0. << " " << sol(Ny2) << endl;
   solu3 << 0. << " " << sol(Ny3) << endl;
   solu4 << 0. << " " << sol(Ny4) << endl;
-  for (int n = 1; n <= nb_iterations; n++) // Boucle en temps
+  for (int n = 1; n <= 1 /*nb_iterations*/; n++) // Boucle en temps
   {
     //cout << "Iteration " << n << endl;
+    cout <<"advance"<<endl;
     time_scheme->Advance();
     //time_scheme->SaveSol(time_scheme->GetSolution(),"ImpliciteScheme", n);
+    cout<<"savesol"<<endl;
     sol=time_scheme->GetSolution();
+    cout<<"dina"<<endl;
+    mesh_adapt->Update(sol);
+    cout <<"fin upd"<<endl;
     tn=n*0.1;
     solu0 << tn << " " << sol(Ny0) << endl;
     solu1 << tn << " " << sol(Ny1) << endl;
@@ -96,6 +105,6 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   delete fin_vol;
   delete data_file;
   delete function;
-
+  delete mesh_adapt;
   return 0;
 }
