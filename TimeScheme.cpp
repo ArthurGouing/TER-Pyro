@@ -124,15 +124,6 @@ TimeScheme(data_file,fin_vol)
 {
 	std::cout << "Build time implicit scheme class." << std::endl;
   std::cout << "-------------------------------------------------" << std::endl;
-  SparseMatrix<double> H=_fin_vol->Get_mat_flux();
-  double dt=_df->Get_dt(), sigma=_df->Get_sigma();
-  SparseMatrix<double> Id;
-  Id.resize(H.rows(),H.rows());
-  Id.setIdentity();
-
-  _IdplusdtsigmaH=Id+dt*sigma*H;
-  _solver_direct.analyzePattern(_IdplusdtsigmaH);
-  _solver_direct.factorize(_IdplusdtsigmaH);
 
 	// cout << "-------------------------------" << endl;
 	// cout << "_IdplusdtsigmaH (build with triplets) = " << endl;
@@ -145,12 +136,36 @@ void ImplicitEulerScheme::Advance()
 {
 	double dt=_df->Get_dt();
 	_t=_t+dt;
+	//cout <<"buildmatrice flux"<<endl;
+	_fin_vol->Build_flux_mat(); //Build_flux_mat_and_BC_RHS(_t);
+	//cout <<"build matrice"<<endl;
 	_fin_vol->Build_BC_RHS(_t);
+	//cout <<"fin build matrice"<<endl;
+
 	Eigen::VectorXd BC_RHS=_fin_vol->Get_BC_RHS();
+	SparseMatrix<double> H=_fin_vol->Get_mat_flux();
+  double sigma=_df->Get_sigma();
+	SparseMatrix<double> Id;
+	Id.resize(H.rows(),H.rows());
+	Id.setIdentity();
+	SparseMatrix<double> IdplusdtsigmaH=Id+dt*sigma*H;
 	Eigen::VectorXd b;
-	b=_sol+dt*BC_RHS;
+	//cout << "resolution"<<endl;
+	_solver_direct.analyzePattern(IdplusdtsigmaH);
+	_solver_direct.factorize(IdplusdtsigmaH);
+
+	 b=_sol+dt*BC_RHS;
 
 	_sol=_solver_direct.solve(b);
+
+	// double dt=_df->Get_dt();
+	// _t=_t+dt;
+	// _fin_vol->Build_BC_RHS(_t);
+	// Eigen::VectorXd BC_RHS=_fin_vol->Get_BC_RHS();
+	// Eigen::VectorXd b;
+	// b=_sol+dt*BC_RHS;
+	//
+	// _sol=_solver_direct.solve(b);
 
 	// cout << "-------------------------------" << endl;
 	// cout << "_sol = " << endl;
