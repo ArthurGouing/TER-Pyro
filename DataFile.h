@@ -12,6 +12,7 @@ private:
   double _lambdapv;
   double _ppv;
   double _cpv;
+  double _Aref, _Ta, _rhov, _rhop, _Lm, _T0;
   double _xmin;
   double _xmax;
   double _dx;
@@ -59,10 +60,16 @@ public:
   const int & Get_Ny() const {return _Ny;};
   const double & Get_ppv() const {return _ppv;};
   const double & Get_cpv() const {return _cpv;};
+  const double & Get_Aref() const {return _Aref;};
+  const double & Get_Ta() const {return _Ta;};
+  const double & Get_rhov() const {return _rhov;};
+  const double & Get_rhop() const {return _rhop;};
+  const double & Get_Lm() const {return _Lm;};
   const double & Get_sigma() const {return _sigma;};
   const double & Get_t0() const {return _t0;};
   const double & Get_tfinal() const {return _tfinal;};
   const double & Get_dt() const {return _dt;};
+  const double & Get_T0() const {return _T0;};
   const int & Get__nb_iterations() const {return _nb_iterations;};
   const std::string & Get_scheme() const {return _scheme;};
   const std::string & Get_results() const {return _results;};

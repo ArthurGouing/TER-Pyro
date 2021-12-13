@@ -3,7 +3,8 @@
 #include "Function.h"
 #include <cmath>
 
-Function::Function(DataFile* data_file)
+Function::Function(DataFile* data_file):
+  _df(data_file)
 {
 }
 
@@ -26,5 +27,19 @@ double Function::SourceFunction(const double t) const
   }
 }
 
+VectorXd Function::Arrhénius(VectorXd rho, VectorXd T)
+{
+  
+  double Aref=_df->Get_Aref(), Ta=_df->Get_Ta(), rhov=_df->Get_rhov(), rhop=_df->Get_rhop();
+  
+  int N;
+  VectorXd A;
+  for (int i=0; i<size(T); ++i)
+    {
+      A(i)=-Aref*exp(-Ta/T(i))*rhov*((rho(i)-rhop)/(rhov-rhop));//N ordre de la méthode
+    }
+  return A;
+}
+  
 #define _FUNCTION_CPP
 #endif

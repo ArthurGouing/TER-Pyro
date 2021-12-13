@@ -18,6 +18,13 @@ DataFile::DataFile(std::string file_name)
   _lambdapv = toml::find<double>(other, "lambdapv");
   _ppv = toml::find<double>(other, "ppv");
   _cpv = toml::find<double>(other, "cpv");
+  _Aref = toml::find<double>(other, "Aref");
+  _Ta =  toml::find<double>(other, "Ta");
+  _Lm = toml::find<double>(other, "Lm");
+  _rhov =toml::find<double>(other, "rhov");
+  _rhop = toml::find<double>(other, "rhop");
+  _T0 = toml::find<double>(other, "T0");
+  
   _sigma = _lambdapv/(_ppv*_cpv);
   system(("rm -r ./" + _results).c_str());
   system(("mkdir -p ./" + _results).c_str());
