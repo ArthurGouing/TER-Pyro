@@ -37,9 +37,10 @@ void Mesh_Adapt::Update(VectorXd T)
 
 for (int i=0; i<_Dy.size()+1;i++)
 {
-  double nu = 2;
-  double c = 1;
-  U2(i)=c*exp(c*_Y(i)/(nu-1))/((nu-1)*(1-exp(c/nu)));
+  //double nu = 2;
+  //double c = 1;
+  //U2(i)=c*exp(c*_Y(i)/(nu-1))/((nu-1)*(1-exp(c/nu)));
+  U2(i)=12*exp(-(_Y(i)-0.005)*(_Y(i)-0.005)/(2*0.0002*0.0002));
 }
   //U2=Derive_y_2(_T); // dérivée seconde selon y en x = dx, aux noeud du maillaage // Attention aux bord
 
@@ -54,11 +55,13 @@ for (int i=0; i<_Dy.size()+1;i++)
     metric(i)= sqrt( max(U2(i),minimum));
   }
 
+  save_vector(metric,_Y, "test_Metric");
   for (int i=1 ; i<K.size(); i++)  //Calcul de K
   {
     K(i)=(metric(i+1)+metric(i))/2;
   }
 
+  save_vector(K,_Dy, "test_K");
   //on construit M et b puis on résout M.x = b
   SparseMatrix<double> M(_Y.size()-2, _Y.size()-2);
   VectorXd b(_Y.size()-2);
@@ -126,7 +129,7 @@ VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T)
   derive2(1) = derive2(2);
   derive2(derive2.size()-1) = derive2(derive2.size()-2);
   derive2(derive2.size()-2) = derive2(derive2.size()-2);
-  
+
   return derive2;
 }
 
