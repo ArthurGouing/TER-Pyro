@@ -84,7 +84,7 @@ void FiniteVolume::Build_BC_RHS(const double& t) //Validé
 	}
 	for (int i=Nx*Ny-Nx; i<=Nx*Ny-1; i++)
 	{
-		_BC_RHS(i)=(1./(ppv*cpv*Dy(i)))*_fct->SourceFunction(t);
+		_BC_RHS(i)=(1./(ppv*cpv*Dy.size()-1))*_fct->SourceFunction(t);
 	}
 
 	// cout << "-------------------------------" << endl;
