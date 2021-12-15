@@ -3,6 +3,7 @@
 #include <chrono>
 #include "TimeScheme.h"
 
+
 using namespace Eigen;
 using namespace std;
 
@@ -74,6 +75,16 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   solu2 << 0. << " " << sol(Ny2) << endl;
   solu3 << 0. << " " << sol(Ny3) << endl;
   solu4 << 0. << " " << sol(Ny4) << endl;
+
+
+
+
+
+
+
+
+
+
   for (int n = 1; n <= 1 /*nb_iterations*/; n++) // Boucle en temps
   {
     //cout << "Iteration " << n << endl;

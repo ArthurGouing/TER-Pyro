@@ -1,13 +1,16 @@
 #ifndef _FUNCTION_H
 
 #include "DataFile.h"
+#include "Dense"
+#include "Sparse"
 
-class Function {
+class Function
+{
 private:
   // Quelques variables privées utiles pour
   // construire la condition initiale et la solution exacte (sigma)
   DataFile* _df;
-  
+
 
 public:
   // Constructeur
@@ -20,7 +23,7 @@ public:
   double SourceFunction(const double t) const;
 
   //Arrhénius
-  Eigen::VectorXd Function::Arrhénius(Eigen::VectorXd rho, Eigen::VectorXd T)
+  Eigen::VectorXd Arrhenius(Eigen::VectorXd rho, Eigen::VectorXd T);
 };
 
 #define _FUNCTION_H

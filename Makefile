@@ -2,9 +2,9 @@
 CC=g++
 
 # Options en mode optimisé - La variable DEBUG est définie comme fausse
-OPTIM_FLAG = -O3 -DNDEBUG -I /home/valentin/TPC++/EigenLibrary/Eigen -std=c++11
+OPTIM_FLAG = -O3 -DNDEBUG -I /net/m/vfallourd/TPC++/EigenLibrary/Eigen/Eigen -std=c++11
 # Options en mode debug - La variable est DEBUG est définie comme vraie
-DEBUG_FLAG = -g -DDEBUG -w -I /home/valentin/TPC++/EigenLibrary/Eigen -std=c++11
+DEBUG_FLAG = -g -DDEBUG -w -I /net/m/vfallourd/TPC++/EigenLibrary/Eigen/Eigen -std=c++11
 
 # On choisit comment on compile
 CXX_FLAGS = $(DEBUG_FLAG)
