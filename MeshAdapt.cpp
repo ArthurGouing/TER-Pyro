@@ -37,7 +37,9 @@ void Mesh_Adapt::Update(VectorXd T)
 
 for (int i=0; i<_Dy.size()+1;i++)
 {
-  U2(i)=0;
+  double nu = 2;
+  double c = 1;
+  U2(i)=c*exp(c*_Y(i)/(nu-1))/((nu-1)*(1-exp(c/nu)));
 }
   //U2=Derive_y_2(_T); // dérivée seconde selon y en x = dx, aux noeud du maillaage // Attention aux bord
 
@@ -63,7 +65,8 @@ for (int i=0; i<_Dy.size()+1;i++)
   vector<Triplet<double>> triplets;
   SparseLU<SparseMatrix<double>, COLAMDOrdering<int> > solver;
 
-  save_vector(_Y, "test_y0");
+  save_vector_mesh(_Y, "test_y0");
+  save_vector(U2,_Y, "test_U2");
 
   b.setZero();
   b(b.size()-1)=K(K.size()-1)*Ly;
@@ -98,8 +101,7 @@ for (int i=0; i<_Dy.size()+1;i++)
     _Dy(i)= _Y(i)-_Y(i-1);
   }
 
-  save_vector(_Y, "test_Y_update");
-  save_vector(U2, "test_U2");
+  save_vector_mesh(_Y, "test_Y_update");
 
   cout <<"marche !!!"<<endl;
 }
@@ -129,18 +131,27 @@ VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T)
 
 
 
-void Mesh_Adapt::save_vector(Eigen::VectorXd Y, std::string a) // pour voir U2 et x
+void Mesh_Adapt::save_vector_mesh(Eigen::VectorXd Y, std::string a) // pour le mesh
 {
   ofstream flux;
   flux.open(a);
   for (int i=0; i<Y.size();i++)
   {
-    flux << i << " " << Y(i) << endl;
+    flux << Y(i) << " " << 0 << endl;
   }
   flux.close();
 }
 
-
+void Mesh_Adapt::save_vector(Eigen::VectorXd U, Eigen::VectorXd Y, std::string a) // pour voir U2
+{
+  ofstream flux;
+  flux.open(a);
+  for (int i=0; i<Y.size();i++)
+  {
+    flux << Y(i) << " " << U(i) << endl;
+  }
+  flux.close();
+}
 
 #define _MESHADAPT_CPP
 #endif

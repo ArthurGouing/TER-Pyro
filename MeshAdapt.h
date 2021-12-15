@@ -17,7 +17,8 @@ class Mesh_Adapt
   Mesh_Adapt(DataFile* data_file);
   void Update(Eigen::VectorXd T);
   Eigen::VectorXd Derive_y_2(Eigen::VectorXd T);
-  void save_vector(Eigen::VectorXd Y, std::string a);
+  void save_vector_mesh(Eigen::VectorXd Y, std::string a);
+  void save_vector(Eigen::VectorXd U, Eigen::VectorXd Y, std::string a); // pour voir U2
   const Eigen::VectorXd Get_Dy() const {return _Dy;}; /////!!!!!!
 };
 
