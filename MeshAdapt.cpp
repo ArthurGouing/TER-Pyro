@@ -126,7 +126,8 @@ VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T)
   derive2(1) = derive2(2);
   derive2(derive2.size()-1) = derive2(derive2.size()-2);
   derive2(derive2.size()-2) = derive2(derive2.size()-2);
-
+  
+  return derive2;
 }
 
 
