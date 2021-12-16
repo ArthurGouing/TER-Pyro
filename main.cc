@@ -59,6 +59,8 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   solu2.open(n_file2, ios::out);
   solu3.open(n_file3, ios::out);
   solu4.open(n_file4, ios::out);
+  
+  // faut mettre des getnx, GetNy et Getdy pour qu'on puisse changer les paramètres
   int Ny0(125*(250-int(ceil(0./0.00004)))-1);
   int Ny1(125*(250-int(ceil(0.001/0.00004)))-1);
   int Ny2(125*(250-int(ceil(0.002/0.00004)))-1);
@@ -76,15 +78,25 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   solu3 << 0. << " " << sol(Ny3) << endl;
   solu4 << 0. << " " << sol(Ny4) << endl;
 
+// test de la fonction derive2
+/*
+  VectorXd X(1000), F(1000), F2(1000), Fexact(1000);
+  double dx=0.001;
+  for (int i=0 ; i<1000 ; i++)
+  {
+    X(i) = i*dx;
+    F(i) = pow(X(i),3);
+    Fexact(i) = 6*X(i);
+  }
+  cout <<"derive2"<< endl;
+  F2 = mesh_adapt->Derive_y_2(X);
+  cout << "save"<<endl;
+  mesh_adapt->save_vector(F, X, "fonction.dat");
+  mesh_adapt->save_vector(Fexact, X, "fonctionE.dat");
+  mesh_adapt->save_vector(F2, X, "fonction2.dat");
 
-
-
-
-
-
-
-
-
+  cout << "fin test derice2"<< endl;
+*/
   for (int n = 1; n <= 1 /*nb_iterations*/; n++) // Boucle en temps
   {
     //cout << "Iteration " << n << endl;
