@@ -12,30 +12,6 @@ DataFile::DataFile(std::string file_name)
   // Lecture du fichier de données
   auto config = toml::parse(file_name);
 
-  // Other
-  const auto& other = toml::find(config, "other");
-  _results = toml::find<std::string>(other, "results");
-  _lambdapv = toml::find<double>(other, "lambdapv");
-  _ppv = toml::find<double>(other, "ppv");
-  _cpv = toml::find<double>(other, "cpv");
-  _Aref = toml::find<double>(other, "Aref");
-  _Ta =  toml::find<double>(other, "Ta");
-  _Lm = toml::find<double>(other, "Lm");
-  _rhov =toml::find<double>(other, "rhov");
-  _rhop = toml::find<double>(other, "rhop");
-  _T0 = toml::find<double>(other, "T0");
-  
-  _sigma = _lambdapv/(_ppv*_cpv);
-  system(("rm -r ./" + _results).c_str());
-  system(("mkdir -p ./" + _results).c_str());
-
-  // Time
-  const auto& time = toml::find(config, "time");
-  _t0 = toml::find<double>(time, "t0");
-  _tfinal = toml::find<double>(time, "tfinal");
-  _dt = toml::find<double>(time, "dt");
-  _scheme = toml::find<std::string>(time, "scheme");
-
   // Space
   const auto& space = toml::find(config, "space");
   _xmin = toml::find<double>(space, "xmin");
@@ -45,12 +21,38 @@ DataFile::DataFile(std::string file_name)
   _ymax = toml::find<double>(space, "ymax");
   _dy = toml::find<double>(space, "dy");
 
+  // Time
+  const auto& time = toml::find(config, "time");
+  _t0 = toml::find<double>(time, "t0");
+  _tfinal = toml::find<double>(time, "tfinal");
+  _dt = toml::find<double>(time, "dt");
+  _scheme = toml::find<std::string>(time, "scheme");
+
+  // Other
+  const auto& other = toml::find(config, "other");
+  _results = toml::find<std::string>(other, "results");
+  _lambdapv = toml::find<double>(other, "lambdapv");
+  _rhov = toml::find<double>(other, "rhov");
+  _rhop = toml::find<double>(other, "rhop");
+  _cpv = toml::find<double>(other, "cpv");
+  _T0 = toml::find<double>(other, "T0");
+  _Aref = toml::find<double>(other, "Aref");
+  _Ta =  toml::find<double>(other, "Ta");
+  _Lm = toml::find<double>(other, "Lm");
+
+  system(("rm -r ./" + _results).c_str());
+  system(("mkdir -p ./" + _results).c_str());
+
   // Boundary conditions
   // const auto& BC = toml::find(config, "BC");
   // _LBC = toml::find<std::string>(BC, "LeftBoundCond");
   // _RBC = toml::find<std::string>(BC, "RightBoundCond");
   // _DBC = toml::find<std::string>(BC, "DownBoundCond");
   // _UBC = toml::find<std::string>(BC, "UpBoundCond");
+
+  // Scenarii
+  const auto& scenarii = toml::find(config, "scenarii");
+  _which_scenario = toml::find<std::string>(scenarii, "which_scenario");
 
   std::cout << "--------------------------------------------------" << std::endl;
   std::cout << "-------------- Adapt dt, dx and dy ---------------" << std::endl;
