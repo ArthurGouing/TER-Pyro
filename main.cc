@@ -27,18 +27,11 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   FiniteVolume* fin_vol = new FiniteVolume(function, data_file, mesh_adapt);
   // Pointeur vers la classe TimeScheme (discrétisation en temps=)
   TimeScheme* time_scheme = NULL;
+  time_scheme = new ImplicitEulerScheme(data_file, fin_vol);
 
   Eigen::VectorXd sol;
-  double tn;
-
-  if (data_file->Get_scheme() == "ExplicitEuler")
-    {
-    time_scheme = new EulerScheme(data_file, fin_vol);
-    }
-  else
-  {
-    time_scheme = new ImplicitEulerScheme(data_file, fin_vol);
-  }
+  double tn, dt=data_file->Get_dt();
+  string scenario=data_file->Get_scenario();
 
   cout << "-------------------------------------------------" << endl;
   cout << "Search u such that : " << endl;
@@ -48,24 +41,16 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   // Démarrage du chrono
   auto start = chrono::high_resolution_clock::now();
 
-  string n_file0 ="results/results0.dat";
-  string n_file1 ="results/results1.dat";
-  string n_file2 ="results/results2.dat";
-  string n_file3 ="results/results3.dat";
-  string n_file4 ="results/results4.dat";
+  string n_file0 ="results/results0.dat", n_file1 ="results/results1.dat", n_file2 ="results/results2.dat", n_file3 ="results/results3.dat", n_file4 ="results/results4.dat";
   ofstream solu0, solu1, solu2, solu3, solu4;
   solu0.open(n_file0, ios::out);
   solu1.open(n_file1, ios::out);
   solu2.open(n_file2, ios::out);
   solu3.open(n_file3, ios::out);
   solu4.open(n_file4, ios::out);
-  
-  // faut mettre des getnx, GetNy et Getdy pour qu'on puisse changer les paramètres
-  int Ny0(125*(250-int(ceil(0./0.00004)))-1);
-  int Ny1(125*(250-int(ceil(0.001/0.00004)))-1);
-  int Ny2(125*(250-int(ceil(0.002/0.00004)))-1);
-  int Ny3(125*(250-int(ceil(0.003/0.00004)))-1);
-  int Ny4(125*(250-int(ceil(0.004/0.00004)))-1);
+  int Nx=data_file->Get_Nx(), Ny=data_file->Get_Ny();
+  double dy = data_file->Get_dy();
+  int Ny0(Nx*(Ny-int(ceil(0./dy)))-1), Ny1(Nx*(Ny-int(ceil(0.001/dy)))-1), Ny2(Nx*(Ny-int(ceil(0.002/dy)))-1), Ny3(Nx*(Ny-int(ceil(0.003/dy)))-1), Ny4(Nx*(Ny-int(ceil(0.004/dy)))-1);
   cout << Ny0 << " " << Ny1 << " " << Ny2 << " " << Ny3 << " " << Ny4 << endl;
 
   cout << "Save initial condition " << endl;
@@ -78,37 +63,21 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   solu3 << 0. << " " << sol(Ny3) << endl;
   solu4 << 0. << " " << sol(Ny4) << endl;
 
-// test de la fonction derive2
-/*
-  VectorXd X(1000), F(1000), F2(1000), Fexact(1000);
-  double dx=0.001;
-  for (int i=0 ; i<1000 ; i++)
-  {
-    X(i) = i*dx;
-    F(i) = pow(X(i),3);
-    Fexact(i) = 6*X(i);
-  }
-  cout <<"derive2"<< endl;
-  F2 = mesh_adapt->Derive_y_2(X);
-  cout << "save"<<endl;
-  mesh_adapt->save_vector(F, X, "fonction.dat");
-  mesh_adapt->save_vector(Fexact, X, "fonctionE.dat");
-  mesh_adapt->save_vector(F2, X, "fonction2.dat");
 
-  cout << "fin test derice2"<< endl;
-*/
-  for (int n = 1; n <= 1 /*nb_iterations*/; n++) // Boucle en temps
+  for (int n = 1; n <= nb_iterations; n++) // Boucle en temps
   {
-    //cout << "Iteration " << n << endl;
-    cout <<"advance"<<endl;
+    cout << "Iteration " << n << endl;
     time_scheme->Advance();
     //time_scheme->SaveSol(time_scheme->GetSolution(),"ImpliciteScheme", n);
-    cout<<"savesol"<<endl;
     sol=time_scheme->GetSolution();
-    cout<<"dina"<<endl;
+
+    //Savoir comment faire ????
+    if (scenario=="adapt")
+    {
     mesh_adapt->Update(sol);
-    cout <<"fin upd"<<endl;
-    tn=n*0.1;
+    }
+
+    tn=n*dt;
     solu0 << tn << " " << sol(Ny0) << endl;
     solu1 << tn << " " << sol(Ny1) << endl;
     solu2 << tn << " " << sol(Ny2) << endl;

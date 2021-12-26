@@ -13,15 +13,15 @@ private:
 	DataFile* _df;
 	Mesh_Adapt* _adm;
 	//Vecteur solution exacte
-  	Eigen::VectorXd _solexact;
+  Eigen::VectorXd _solexact;
 
 public:
 	// Constructeur
 	FiniteVolume(Function* function, DataFile* data_file, Mesh_Adapt * adapt_mesh);
-	void Build_flux_mat();
-	void Build_BC_RHS(const double& t);
+	void Build_flux_mat(Eigen::VectorXd rho, Eigen::VectorXd rhostar);
+	void Build_BC_RHS(const double& t, Eigen::VectorXd rho, Eigen::VectorXd rhostar);
 	Eigen::VectorXd ExactSolution(double t);
-	const Function* Get_fct() const {return _fct;};
+	Function* Get_fct() const {return _fct;};
 	const Eigen::SparseMatrix<double> Get_mat_flux() const {return _mat_flux;};
 	const Eigen::VectorXd Get_BC_RHS() const {return _BC_RHS;};
 };

@@ -1,0 +1,13 @@
+set title "Evolution de la température en fonction du temps à différentes distances de la paroi" 
+set title textcolor rgb "red"
+set xlabel "t (en s)"
+set ylabel "T (en K)"
+!set ytic rotate -90
+set grid back xtics mxtics nomytics ytics
+
+plot "results/results0.dat" title "Temperatures à la paroi" w l, "results/results1.dat" title "Temperatures à 1 mm" w l, "results/results2.dat" title "Temperatures à 2 mm" w l, "results/results3.dat" title "Temperatures à 3 mm" w l, "results/results4.dat" title "Temperatures à 4 mm" w l
+
+set term png
+set output "dfdv2ordre2.png"
+replot
+set term wxt

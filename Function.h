@@ -19,6 +19,9 @@ public:
   // Condition initiale
   double InitialCondition(const double x, const double y) const;
 
+  // Condition initiale masse volumique
+  double InitialConditionrho(const double x, const double y) const;
+
   // Terme source
   double SourceFunction(const double t) const;
 
