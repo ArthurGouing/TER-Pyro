@@ -61,8 +61,10 @@ void TimeScheme::InitialCondition()
 ImplicitEulerScheme::ImplicitEulerScheme(DataFile* data_file, FiniteVolume* fin_vol) :
 TimeScheme(data_file,fin_vol)
 {
-	std::cout << "Build time implicit scheme class." << std::endl;
-  std::cout << "-------------------------------------------------" << std::endl;
+	std::cout << "                                                  " << std::endl;
+	std::cout << "--------------------------------------------------" << std::endl;
+	std::cout << "-------- Build time implicit scheme class --------" << std::endl;
+  std::cout << "--------------------------------------------------" << std::endl;
 }
 
 

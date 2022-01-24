@@ -9,7 +9,7 @@
 class Mesh_Adapt
  {
  private:
-   Eigen::VectorXd _T;
+   Eigen::VectorXd _T, _U;
   Eigen::VectorXd _Dy;
   Eigen::VectorXd _Y;
   DataFile* _df;
@@ -20,6 +20,7 @@ class Mesh_Adapt
   void save_vector_mesh(Eigen::VectorXd Y, std::string a);
   void save_vector(Eigen::VectorXd U, Eigen::VectorXd Y, std::string a); // pour voir U2
   const Eigen::VectorXd Get_Dy() const {return _Dy;}; /////!!!!!!
+  int cellule(double distance);
 };
 
 #define _MESHADAPT_CPP
