@@ -66,17 +66,6 @@ TimeScheme(data_file,fin_vol)
 }
 
 
-VectorXd ImplicitEulerScheme::rhostarexp(VectorXd rho, VectorXd sol)
-{
-	Eigen::VectorXd Arr, rhonpun;
-	double dt = _df->Get_dt();
-
-	Arr=_fin_vol->Get_fct()->Arrhenius(rho,sol);
-	rhonpun=rho+dt*Arr;
-
-	return rhonpun;
-}
-
 
 void ImplicitEulerScheme::Advance()
 {
@@ -85,7 +74,9 @@ void ImplicitEulerScheme::Advance()
 
 
 	//Calcul de _rhostar
-	_rhostar=rhostarexp(_rho, _sol);
+	Eigen::VectorXd Arr;
+	Arr=_fin_vol->Get_fct()->Arrhenius(_rho,_sol);
+	_rhostar=_rho+dt*Arr;
 
 
 	//Calcul de Tn+1
@@ -102,7 +93,9 @@ void ImplicitEulerScheme::Advance()
 
 
 	//Calcul de rhon+1
-	_rho=rhostarexp(_rhostar, _sol);
+	//Arr=_fin_vol->Get_fct()->Arrhenius(_rhostar,_sol);
+	//_rho=_rhostar+dt*Arr;
+	_rho=_rhostar;
 
 	// cout << "-------------------------------" << endl;
 	// cout << "_sol = " << endl;
@@ -116,6 +109,12 @@ void ImplicitEulerScheme::Advance()
 const Eigen::VectorXd & TimeScheme::GetSolution() const
 {
   return _sol;
+}
+
+
+const Eigen::VectorXd & TimeScheme::GetSolutionrho() const
+{
+  return _rho;
 }
 
 

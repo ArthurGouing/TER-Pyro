@@ -27,6 +27,7 @@ public:
   virtual void Advance() = 0;
   // Permet de récupérer _sol
   const Eigen::VectorXd & GetSolution() const;
+  const Eigen::VectorXd & GetSolutionrho() const;
 };
 
 
@@ -36,7 +37,6 @@ private:
   Eigen::SparseLU<Eigen::SparseMatrix<double> > _solver_direct;
 public:
   ImplicitEulerScheme(DataFile* data_file, FiniteVolume* fin_vol);
-  Eigen::VectorXd rhostarexp(Eigen::VectorXd rho, Eigen::VectorXd sol);
   void Advance();
 };
 
