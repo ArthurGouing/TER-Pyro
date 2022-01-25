@@ -95,9 +95,14 @@ void ImplicitEulerScheme::Advance()
 
 
 	//Calcul de rhon+1
-	//Arr=_fin_vol->Get_fct()->Arrhenius(_rhostar,_sol);
-	//_rho=_rhostar+dt*Arr;
-	_rho=_rhostar;
+	double Aref=_df->Get_Aref(), Ta=_df->Get_Ta(), rhov=_df->Get_rhov(), rhop=_df->Get_rhop();
+	Arr=_fin_vol->Get_fct()->Arrhenius(_rhostar,_sol);
+	double B = rhov*Aref*dt/(rhov-rhop);
+	for (int i=0; i<_rho.size() ;i++)
+	{
+		_rho(i)=(_rho(i)+B*rhop*exp(-Ta/_sol(i)))/(1.+B*exp(-Ta/_sol(i)));
+	}
+
 
 	// cout << "-------------------------------" << endl;
 	// cout << "_sol = " << endl;
@@ -148,6 +153,21 @@ void TimeScheme::SaveSol(Eigen::VectorXd sol, string n_sol, int n)
 		solution << endl;
 	}
 	solution.close();
+}
+
+void TimeScheme::Save_rho(Eigen::VectorXd rho , double t , std::string name_file)
+{
+	string n_file = name_file + to_string(t) + ".txt";
+	int Nx(_df->Get_Nx()), Ny(_df->Get_Ny());
+	double xmin(_df->Get_xmin()), ymin(_df->Get_ymin());
+	double dx(_df->Get_dx()), dy(_df->Get_dy());
+	ofstream solution_rho;
+	solution_rho.open(name_file, ios::out);
+	for (int i=0 ; i<Ny ;i++)
+	{
+		solution_rho << i*dy << rho(i*Nx) <<endl;
+	}
+	solution_rho.close();
 }
 
 #define _TIME_SCHEME_CPP

@@ -117,7 +117,7 @@ void FiniteVolume::Build_BC_RHS(const double& t, VectorXd rho, VectorXd rhostar)
 	//Partie pyro
 	for (int i=0; i<=Nx*Ny-1; i++)
 	{
-		_BC_RHS(i)+=-(1.-(rhostar(i)/rho(i)))*((Lm/cpv)-T0);
+		_BC_RHS(i)+=(1.-(rhostar(i)/rho(i)))*((Lm/cpv)-T0);
 	}
 
 	// cout << "-------------------------------" << endl;

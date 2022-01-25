@@ -71,8 +71,8 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   cout << "A 0 mm : Ny0 = " << Nylist[0] << "        " << "A 1 mm : Ny1 = " << Nylist[1] << endl;
   cout << "A 2 mm : Ny2 = " << Nylist[2] << "        " << "A 3 mm : Ny3 = " << Nylist[3] << endl;
   cout << "A 4 mm : Ny4 = " << Nylist[4] << endl;
+  cout << "!!! Si vous obtenez des nombres négatifs : ymax est trop petit par rapport à la distance à la paroi où on cherche la solution !!!"
   cout << "--------------------------------------------------" << endl;
-
 
   //Sauvegarde de la solution initiale
   cout << "                                                  " << ::endl;
@@ -124,7 +124,7 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   auto finish = chrono::high_resolution_clock::now();
   double t = chrono::duration_cast<chrono::seconds>(finish-start).count();
   // Affichage du résultat
-  cout << "Cela a pris "<< t << " seconds" << endl;
+  cout << "Cela a pris "<< t << " secondes" << endl;
 
   delete time_scheme;
   delete fin_vol;

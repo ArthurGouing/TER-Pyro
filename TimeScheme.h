@@ -23,6 +23,7 @@ public:
   void InitialCondition();
   // Enregistre la solution un fichier
   void SaveSol(Eigen::VectorXd sol, std::string n_sol, int n);
+  void Save_rho(Eigen::VectorXd rho , double t , std::string name_file);
   // Une étape du schéma en temps
   virtual void Advance() = 0;
   // Permet de récupérer _sol
