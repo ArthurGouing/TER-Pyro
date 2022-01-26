@@ -61,21 +61,12 @@ void TimeScheme::InitialCondition()
 ImplicitEulerScheme::ImplicitEulerScheme(DataFile* data_file, FiniteVolume* fin_vol) :
 TimeScheme(data_file,fin_vol)
 {
-	std::cout << "Build time implicit scheme class." << std::endl;
-  std::cout << "-------------------------------------------------" << std::endl;
+	std::cout << "                                                  " << std::endl;
+	std::cout << "--------------------------------------------------" << std::endl;
+	std::cout << "-------- Build time implicit scheme class --------" << std::endl;
+  std::cout << "--------------------------------------------------" << std::endl;
 }
 
-
-VectorXd ImplicitEulerScheme::rhostarexp(VectorXd rho, VectorXd sol)
-{
-	Eigen::VectorXd Arr, rhonpun;
-	double dt = _df->Get_dt();
-
-	Arr=_fin_vol->Get_fct()->Arrhenius(rho,sol);
-	rhonpun=rho+dt*Arr;
-
-	return rhonpun;
-}
 
 
 void ImplicitEulerScheme::Advance()
@@ -85,7 +76,9 @@ void ImplicitEulerScheme::Advance()
 
 
 	//Calcul de _rhostar
-	_rhostar=rhostarexp(_rho, _sol);
+	Eigen::VectorXd Arr;
+	Arr=_fin_vol->Get_fct()->Arrhenius(_rho,_sol);
+	_rhostar=_rho+dt*Arr;
 
 
 	//Calcul de Tn+1
@@ -102,7 +95,14 @@ void ImplicitEulerScheme::Advance()
 
 
 	//Calcul de rhon+1
-	_rho=rhostarexp(_rhostar, _sol);
+	double Aref=_df->Get_Aref(), Ta=_df->Get_Ta(), rhov=_df->Get_rhov(), rhop=_df->Get_rhop();
+	Arr=_fin_vol->Get_fct()->Arrhenius(_rhostar,_sol);
+	double B = rhov*Aref*dt/(rhov-rhop);
+	for (int i=0; i<_rho.size() ;i++)
+	{
+		_rho(i)=(_rho(i)+B*rhop*exp(-Ta/_sol(i)))/(1.+B*exp(-Ta/_sol(i)));
+	}
+
 
 	// cout << "-------------------------------" << endl;
 	// cout << "_sol = " << endl;
@@ -116,6 +116,12 @@ void ImplicitEulerScheme::Advance()
 const Eigen::VectorXd & TimeScheme::GetSolution() const
 {
   return _sol;
+}
+
+
+const Eigen::VectorXd & TimeScheme::GetSolutionrho() const
+{
+  return _rho;
 }
 
 
@@ -147,6 +153,21 @@ void TimeScheme::SaveSol(Eigen::VectorXd sol, string n_sol, int n)
 		solution << endl;
 	}
 	solution.close();
+}
+
+void TimeScheme::Save_rho(Eigen::VectorXd rho , double t , std::string name_file)
+{
+	string n_file = name_file + to_string(t) + ".txt";
+	int Nx(_df->Get_Nx()), Ny(_df->Get_Ny());
+	double xmin(_df->Get_xmin()), ymin(_df->Get_ymin());
+	double dx(_df->Get_dx()), dy(_df->Get_dy());
+	ofstream solution_rho;
+	solution_rho.open(name_file, ios::out);
+	for (int i=0 ; i<Ny ;i++)
+	{
+		solution_rho << i*dy << rho(i*Nx) <<endl;
+	}
+	solution_rho.close();
 }
 
 #define _TIME_SCHEME_CPP

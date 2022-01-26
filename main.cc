@@ -11,7 +11,7 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
 {
   if (argc < 2)
   {
-  cout << "Please, enter the name of your data file." << endl; abort();
+    cout << "Please, enter the name of your data file." << endl; abort();
   }
   // ----------------------- Fichier de données --------------------------------
   DataFile* data_file = new DataFile(argv[1]);
@@ -21,7 +21,6 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   // Pointeur contenant toutes les fonctions utiles
   Function* function = new Function(data_file);
   // Pointeur vers la classe MeshAdapt (adaptation de maillage) //!!!!!
-  cout << "constructeur"<<endl;
   Mesh_Adapt* mesh_adapt = new Mesh_Adapt(data_file); //!!!!
   // Pointeur vers la classe FiniteVolume (discrétisation en espace)
   FiniteVolume* fin_vol = new FiniteVolume(function, data_file, mesh_adapt);
@@ -29,69 +28,103 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   TimeScheme* time_scheme = NULL;
   time_scheme = new ImplicitEulerScheme(data_file, fin_vol);
 
-  Eigen::VectorXd sol;
-  double tn, dt=data_file->Get_dt();
-  string scenario=data_file->Get_scenario();
+  Eigen::VectorXd temp, rho;
+  double tn=data_file->Get_t0(), dt=data_file->Get_dt();
+  string maillage=data_file->Get_scenario(), scenario=data_file->Get_results();
 
-  cout << "-------------------------------------------------" << endl;
-  cout << "Search u such that : " << endl;
-  cout << "dt u + div (v u) - div(mu grad(u)) = f" << endl;
-  cout << "-------------------------------------------------" << endl;
+  cout << "                                                  " << ::endl;
+  cout << "--------------------------------------------------" << endl;
+  cout << "------------ Search T and p such that : ----------" << endl;
+  cout << " dt(p*Cp*(T-T0)) = div(lambda*grad(T)) - Lm*dt(p) " << endl;
+  cout << "    dt(p) = -pv*A*((p-pp)/(pv-pp))*exp(-Ta/T)     " << endl;
+  cout << "------------ Case : "<< scenario << " " << maillage << " -------------" << endl;
+  cout << "--------------------------------------------------" << endl;
+
 
   // Démarrage du chrono
   auto start = chrono::high_resolution_clock::now();
 
-  string n_file0 ="results/results0.dat", n_file1 ="results/results1.dat", n_file2 ="results/results2.dat", n_file3 ="results/results3.dat", n_file4 ="results/results4.dat";
-  ofstream solu0, solu1, solu2, solu3, solu4;
-  solu0.open(n_file0, ios::out);
-  solu1.open(n_file1, ios::out);
-  solu2.open(n_file2, ios::out);
-  solu3.open(n_file3, ios::out);
-  solu4.open(n_file4, ios::out);
-  int Nx=data_file->Get_Nx(), Ny=data_file->Get_Ny();
-  double dy = data_file->Get_dy();
-  int Ny0(Nx*(Ny-int(ceil(0./dy)))-1), Ny1(Nx*(Ny-int(ceil(0.001/dy)))-1), Ny2(Nx*(Ny-int(ceil(0.002/dy)))-1), Ny3(Nx*(Ny-int(ceil(0.003/dy)))-1), Ny4(Nx*(Ny-int(ceil(0.004/dy)))-1);
-  cout << Ny0 << " " << Ny1 << " " << Ny2 << " " << Ny3 << " " << Ny4 << endl;
 
-  cout << "Save initial condition " << endl;
+  //Ouverture des fichiers solutions à plusieurs distances de la paroie
+  vector<ofstream> templist;
+  vector<ofstream> rholist;
+  templist.resize(5);
+  rholist.resize(5);
+  for (int i = 0; i <= 4 ; i++)
+  {
+    string n_filetemp = data_file->Get_results() + "Temperatures_" + to_string(i)+ "mm.dat";
+    templist[i].open(n_filetemp, ios::out);
+    if (data_file->Get_Aref()!=0)
+    {
+      string n_filerho  = data_file->Get_results() + "Rho_" + to_string(i)+ "mm.dat";
+      rholist[i].open(n_filerho, ios::out);
+    }
+  }
+
+
+  //Obtention du numéro de la ligne corespondant à la distance
+  vector<int> Nylist(5);
+  Nylist={mesh_adapt->cellule(0.),mesh_adapt->cellule(0.001),mesh_adapt->cellule(0.002),mesh_adapt->cellule(0.003),mesh_adapt->cellule(0.004)};
+  cout << "                                                  " << ::endl;
+  cout << "--------------------------------------------------" << endl;
+  cout << "   Numéro de la ligne correpondant à la distance  " << endl;
+  cout << "A 0 mm : Ny0 = " << Nylist[0] << "        " << "A 1 mm : Ny1 = " << Nylist[1] << endl;
+  cout << "A 2 mm : Ny2 = " << Nylist[2] << "        " << "A 3 mm : Ny3 = " << Nylist[3] << endl;
+  cout << "A 4 mm : Ny4 = " << Nylist[4] << endl;
+  cout << "!!! Si vous obtenez des nombres négatifs : ymax est trop petit par rapport à la distance à la paroi où on cherche la solution !!!"
+  cout << "--------------------------------------------------" << endl;
+
+  //Sauvegarde de la solution initiale
+  cout << "                                                  " << ::endl;
+  cout << "--------------------------------------------------" << endl;
+  cout << "------------ Save initial condition --------------" << endl;
   time_scheme->SaveSol(time_scheme->GetSolution(),"ImpliciteScheme", 0); //peut être que ca va déconner avec le fait de pas utiliser une varibale
-  cout << "Time Loop" << endl;
-  sol=time_scheme->GetSolution();
-  solu0 << 0. << " " << sol(Ny0) << endl;
-  solu1 << 0. << " " << sol(Ny1) << endl;
-  solu2 << 0. << " " << sol(Ny2) << endl;
-  solu3 << 0. << " " << sol(Ny3) << endl;
-  solu4 << 0. << " " << sol(Ny4) << endl;
+  temp=time_scheme->GetSolution();
+  rho=time_scheme->GetSolutionrho();
+  for (int i = 0; i <= 4 ; i++)
+  {
+    templist[i] << 0. << " " << temp(Nylist[i]) << endl;
+    if (data_file->Get_Aref()!=0.)
+    {
+      rholist[i]  << 0. << " " << rho(Nylist[i])  << endl;
+    }
+  }
+  cout << "-------------------------------------------------" << endl;
 
 
+  //Itérations
+  cout << "                                                  " << ::endl;
+  cout << "--------------------------------------------------" << endl;
+  cout << "------------      Time Loop         --------------" << endl;
   for (int n = 1; n <= nb_iterations; n++) // Boucle en temps
   {
-    cout << "Iteration " << n << endl;
-    time_scheme->Advance();
-    //time_scheme->SaveSol(time_scheme->GetSolution(),"ImpliciteScheme", n);
-    sol=time_scheme->GetSolution();
-
-    //Savoir comment faire ????
-    if (scenario=="adapt")
-    {
-    mesh_adapt->Update(sol);
-    }
-
     tn=n*dt;
-    solu0 << tn << " " << sol(Ny0) << endl;
-    solu1 << tn << " " << sol(Ny1) << endl;
-    solu2 << tn << " " << sol(Ny2) << endl;
-    solu3 << tn << " " << sol(Ny3) << endl;
-    solu4 << tn << " " << sol(Ny4) << endl;
+    cout << "Iteration : " << n << " Temps : " << tn << " s" << endl;
+    time_scheme->Advance();
+    time_scheme->SaveSol(time_scheme->GetSolution(),"ImpliciteScheme", n);
+    temp=time_scheme->GetSolution();
+    rho=time_scheme->GetSolutionrho();
+    //Savoir comment faire ????
+    if (maillage=="adapt")
+    {
+      mesh_adapt->Update(temp);
+    }
+    for (int i = 0; i <= 4 ; i++)
+    {
+      templist[i] << tn << " " << temp(Nylist[i]) << endl;
+      if (data_file->Get_Aref()!=0.)
+      {
+        rholist[i]  << tn << " " << rho(Nylist[i])  << endl;
+      }
+    }
   }
-  time_scheme->SaveSol(time_scheme->GetSolution(),"ImpliciteScheme", nb_iterations);
-  // ---------------------------------------------------------------------------
+  cout << "--------------------------------------------------" << endl;
 
   // Fin du chrono
   auto finish = chrono::high_resolution_clock::now();
   double t = chrono::duration_cast<chrono::seconds>(finish-start).count();
   // Affichage du résultat
-  cout << "Cela a pris "<< t << " seconds" << endl;
+  cout << "Cela a pris "<< t << " secondes" << endl;
 
   delete time_scheme;
   delete fin_vol;

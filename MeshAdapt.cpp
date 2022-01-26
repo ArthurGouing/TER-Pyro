@@ -17,11 +17,48 @@ _df(data_file)
 {
   _Dy.resize(_df->Get_Ny()); //taille de Dy=nombre de cases verticales
   _Y.resize(_df->Get_Ny()+1);
-  _Y(0)=0;
+  _Y(0)=0.;
   for (int i=0; i<_Dy.size(); i++)
   {
     _Dy(i) =_df->Get_dy();
     _Y(i+1) = _Y(i)+_df->Get_dy();
+  }
+
+  ////////////////////////////Nouveau pour le test
+  int i=0;
+  ifstream fichier("Eulerexplicite_ci_1_cl_1_L_0._tmax_4.0_imax_1000.dat", ios::in);  //Ouverture d'un fichier en lecture
+  if(fichier)
+  {
+    string ligne; //Une variable pour stocker les lignes lues
+    double number1, number2;
+
+    _Y.resize(1001);
+    _T.resize(1001);
+    _Dy.resize(1000);
+    while (fichier >> number1 >> number2)
+    {
+      _Y(i)=number1;
+      _T(i)=number2;
+      cout << _Y(i) << " " << _T(i) << endl;
+      i=i+1;
+    }
+    // while(getline(fichier, ligne)) //Tant qu'on n'est pas à la fin, on lit
+    // {
+    //   double a, b;
+    //    cout << ligne << endl;
+    //    fichier >> a >> b;
+    //    cout << a << b << endl;
+    //    // fichier >>_Y(i) >> _T(i);
+    //    // cout << _Y(i) << _T(i);
+    //    //Et on l'affiche dans la console
+    //    //Ou alors on fait quelque chose avec cette ligne
+    //    //À vous de voir
+    //  }
+
+  }
+  else
+  {
+    cout << "ERREUR: Impossible d'ouvrir le fichier en lecture." << endl;
   }
 
 }
@@ -29,6 +66,7 @@ _df(data_file)
 void Mesh_Adapt::Update(VectorXd rho)
 {
   //calcul u
+
   int Nx = _df->Get_Nx();
   int Ny = _df->Get_Ny();
   double Ly = _df->Get_ymax();
@@ -64,10 +102,13 @@ void Mesh_Adapt::Update(VectorXd rho)
     metric(i)= sqrt( max(U2(i),minimum));
   }
 
+  save_vector(metric,_Y, "test_Metric");
+
   for (int i=0 ; i<K.size(); i++)  //Calcul de K
   {
-    K(i)=(metric(i+1)+metric(i))/2;
+    K(i)=(metric(i)+metric(i+1))/2.;
   }
+
 
   //On construit M et b puis on résout M.x = b
   SparseMatrix<double> M(Ny-1, Ny-1);
@@ -100,12 +141,12 @@ void Mesh_Adapt::Update(VectorXd rho)
 
   solver.analyzePattern(M);
   solver.factorize(M);
-  Ysolv = solver.solve(b);
 
-  //on actualise les _Y à l'intérieur du maillage
-  for (int i=0; i<Ysolv.size();i++)
+  Yprime = solver.solve(b);
+
+  for (int i=1; i<_Y.size()-1;i++) //On remplit M
   {
-    _Y(i+1)= Ysolv(i);
+    _Y(i)=Yprime(i-1);
   }
 
 
@@ -137,6 +178,7 @@ void Mesh_Adapt::Update(VectorXd rho)
   //
 }
 
+
 VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T)
 {
 
@@ -162,9 +204,46 @@ VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T)
   derive2(0) = derive2(2);
   derive2(1) = derive2(2);
   derive2(derive2.size()-1) = derive2(derive2.size()-3);
-  derive2(derive2.size()-2) = derive2(derive2.size()-3);
   return derive2;
 }
+
+
+// VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T)
+// {
+//   double Ny = _df->Get_Ny();
+//   double Nx = _df->Get_Nx();
+//   VectorXd derive2(Ny+1), derive1(Ny+1);
+//   VectorXd U(Ny+1);
+//
+//   //Calcul de U
+//   U(0)=T(0);
+//   for (int i=1;i<=Ny-1; i++)
+//   {
+//     U(i)=(T((i-1)*Nx)+T(i*Nx))/2.;
+//   }
+//   U(Ny)=T((Ny-1)*Nx);
+//
+//   //Calcul de U1
+//   derive1(0)=(U(1)-U(0))/(_Y(1)-_Y(0));
+//   for (int i=1;i<=Ny-1; i++)
+//   {
+//     U(i)=(T(i-1)+T(i))/2.;
+//   }
+//   derive1(Ny)=(U(Ny)-U(Ny-1))/(_Y(Ny)-_Y(Ny-1));
+//
+//   //Calcul de U2
+//   derive2(0) = (2./pow(_Y(1)-_Y(0),2))*(U(1)-U(0)-(_Y(1)-_Y(0))*derive1(0));
+//   for (int i=1;i<=Ny-2; i++) //Cas général (1 à Ny-1)
+//   {
+//     double U2g = (2./pow(_Y(i-1)-_Y(i),2))*(U(i-1)-U(i)-(_Y(i-1)-_Y(i))*derive1(i));
+//     double U2d = (2./pow(_Y(i+1)-_Y(i),2))*(U(i+1)-U(i)-(_Y(i+1)-_Y(i))*derive1(i));
+//
+//     derive2(i) = (U2d*(_Y(i+1)-_Y(i))-U2g*(_Y(i-1)-_Y(i)))/((_Y(i+1)-_Y(i))-(_Y(i-1)-_Y(i)));
+//   }
+//   derive2(Ny) = (2./pow(_Y(Ny-1)-_Y(Ny),2))*(U(Ny-1)-U(Ny)-(_Y(Ny-1)-_Y(Ny))*derive1(Ny));
+//
+//   return derive2;
+// }
 
 
 
@@ -190,6 +269,15 @@ void Mesh_Adapt::save_vector(Eigen::VectorXd U, Eigen::VectorXd Y, std::string a
   }
 
   flux.close();
+}
+
+int Mesh_Adapt::cellule(double distance) //A changer surement avec l'adaptation de maillage !!!!!!!!!!!!!!!!!!
+{
+  int Nx=_df->Get_Nx(), Ny=_df->Get_Ny();
+  double dy = _df->Get_dy();
+  int Nydist = (Nx*(Ny-int(ceil(distance/dy)))-1);
+
+  return Nydist;
 }
 
 #define _MESHADAPT_CPP
