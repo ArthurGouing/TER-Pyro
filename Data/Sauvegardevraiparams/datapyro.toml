@@ -22,7 +22,7 @@ T0 = 293.0
 # Si on veut désactiver la pyrolyse => Aref=0.0 normalement
 Aref= 1000.0
 Ta=6000.0
-Lm=-3000000.0
+Lm=3000000.0
 
 # Test scenarii
 # Choice between: "noadapt", "adapt"
