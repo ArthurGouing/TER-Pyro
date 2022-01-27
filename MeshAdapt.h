@@ -9,7 +9,7 @@
 class Mesh_Adapt
  {
  private:
-  Eigen::VectorXd _rho;
+   Eigen::VectorXd _rho;
   Eigen::VectorXd _Dy;
   Eigen::VectorXd _Y;
   DataFile* _df;

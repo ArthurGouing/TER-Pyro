@@ -56,10 +56,9 @@ DataFile::DataFile(std::string file_name)
 
   std::cout << "--------------------------------------------------" << std::endl;
   std::cout << "-------------- Adapt dt, dx and dy ---------------" << std::endl;
-  std::cout << "-------------- xmax = xmin + Nx*dx ---------------" << std::endl;
-  std::cout << "-------------- ymax = ymin + Ny*dy ---------------" << std::endl;
+  std::cout << "-------------- xmax = xmin + Nx*dx -----------" << std::endl;
+  std::cout << "-------------- ymax = ymin + Ny*dy -----------" << std::endl;
   std::cout << "-------------- tfinal = t0 + nb_it*dt ------------" << std::endl;
-  std::cout << "--------------------------------------------------" << std::endl;
   // Calcul de _Nx et adaptation de _dx pour que (xmax - xmin) = (Nx+1)*dx
   _Nx = int(ceil((_xmax-_xmin)/_dx));
   _dx = (_xmax-_xmin)/(_Nx);
@@ -81,15 +80,7 @@ DataFile::DataFile(std::string file_name)
   // Adapter le pas de temps pour avoir _tfinal = _t0 + nb_iterations*_dt
   _nb_iterations = int(ceil((_tfinal-_t0)/_dt)); // Définition du nombre d’itérations(arrondi au plus grand)
   _dt = (_tfinal-_t0) / _nb_iterations;
-  std::cout << "                                                  " << std::endl;
-  std::cout << "--------------------------------------------------" << std::endl;
-  std::cout << "-------------- Constantes temporelles ------------" << std::endl;
-  std::cout << "---------- _nb_iterations=" << _nb_iterations << "   " << "_dt = " << _dt << " ----------" << std::endl;
-  std::cout << "--------------------------------------------------" << std::endl;
-  std::cout << "                                                  " << std::endl;
-  std::cout << "--------------------------------------------------" << std::endl;
-  std::cout << "-------------- Constantes spatiales --------------" << std::endl;
-  std::cout << "-- dx = " << _dx << "  " << "dy = " << _dy <<  "  " << "Nx = " << _Nx << "  " << "Ny = " << _Ny << " ---" << std::endl;
+  std::cout << "nb_iterations=" << _nb_iterations << " " << "_dt = " << _dt << " _dx = " << _dx << " _dy = " << _dy << " _Nx = " << _Nx << " _Ny = " << _Ny <<  std::endl;
   std::cout << "--------------------------------------------------" << std::endl;
 }
 
