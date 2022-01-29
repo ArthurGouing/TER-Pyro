@@ -23,7 +23,7 @@ _df(data_file)
     _Dy(i) =_df->Get_dy();
     _Y(i+1) = _Y(i)+_df->Get_dy();
   }
-
+/*
   ////////////////////////////Nouveau pour le test
   int i=0;
   ifstream fichier("Eulerexplicite_ci_1_cl_1_L_0._tmax_4.0_imax_1000.dat", ios::in);  //Ouverture d'un fichier en lecture
@@ -60,7 +60,7 @@ _df(data_file)
   {
     cout << "ERREUR: Impossible d'ouvrir le fichier en lecture." << endl;
   }
-
+*/
 }
 
 void Mesh_Adapt::Update(VectorXd rho)
@@ -142,11 +142,11 @@ void Mesh_Adapt::Update(VectorXd rho)
   solver.analyzePattern(M);
   solver.factorize(M);
 
-  Yprime = solver.solve(b);
+  Ysolv = solver.solve(b);
 
   for (int i=1; i<_Y.size()-1;i++) //On remplit M
   {
-    _Y(i)=Yprime(i-1);
+    _Y(i)=Ysolv(i-1);
   }
 
 
@@ -160,7 +160,14 @@ void Mesh_Adapt::Update(VectorXd rho)
 
     }
   }
-
+  for (int i=0; i<Ny+1;i++)
+  {
+    //double nu = 2;
+    //double c = 1;
+    //U2(i)=c*exp(c*_Y(i)/(nu-1))/((nu-1)*(1-exp(c/nu)));
+    U2(i)=25*exp(-(_Y(i)-0.005)*(_Y(i)-0.005)/(2*0.0002*0.0002));
+  }
+  save_vector(U2,_Y, "test_d2T0.dat");
   //
   // // test de la fonction derive2 pour un maillage non uniforme
   // cout << "debut test derive" << endl;
@@ -260,7 +267,7 @@ void Mesh_Adapt::save_vector_mesh(Eigen::VectorXd Y, std::string a) // pour le m
 
 void Mesh_Adapt::save_vector(Eigen::VectorXd U, Eigen::VectorXd Y, std::string a) // pour voir U2
 {
-  cout << "Dans le fichier "+a+" le vecteur U est de taill "<<U.size()<<" et Y est de taille "<<Y.size()<<endl;
+  //cout << "Dans le fichier "+a+" le vecteur U est de taill "<<U.size()<<" et Y est de taille "<<Y.size()<<endl;
   ofstream flux;
   flux.open(a);
   for (int i=0; i<Y.size();i++)
