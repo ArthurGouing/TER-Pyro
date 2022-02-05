@@ -23,44 +23,6 @@ _df(data_file)
     _Dy(i) =_df->Get_dy();
     _Y(i+1) = _Y(i)+_df->Get_dy();
   }
-  /*
-  ////////////////////////////Nouveau pour le test
-  int i=0;
-  ifstream fichier("Eulerexplicite_ci_1_cl_1_L_0._tmax_4.0_imax_1000.dat", ios::in);  //Ouverture d'un fichier en lecture
-  if(fichier)
-  {
-  string ligne; //Une variable pour stocker les lignes lues
-  double number1, number2;
-
-  _Y.resize(1001);
-  _T.resize(1001);
-  _Dy.resize(1000);
-  while (fichier >> number1 >> number2)
-  {
-  _Y(i)=number1;
-  _T(i)=number2;
-  cout << _Y(i) << " " << _T(i) << endl;
-  i=i+1;
-}
-// while(getline(fichier, ligne)) //Tant qu'on n'est pas à la fin, on lit
-// {
-//   double a, b;
-//    cout << ligne << endl;
-//    fichier >> a >> b;
-//    cout << a << b << endl;
-//    // fichier >>_Y(i) >> _T(i);
-//    // cout << _Y(i) << _T(i);
-//    //Et on l'affiche dans la console
-//    //Ou alors on fait quelque chose avec cette ligne
-//    //À vous de voir
-//  }
-
-}
-else
-{
-cout << "ERREUR: Impossible d'ouvrir le fichier en lecture." << endl;
-}
-*/
 }
 
 void Mesh_Adapt::Update(VectorXd rho)
@@ -152,12 +114,7 @@ VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T)
   VectorXd derive2 (_Dy.size()+1);
   for (int i=2;i<derive2.size()-2; i++) //Cas général
   {
-
-    // double Tim1 = (T[(i-1)*Nx]+T[(i)*Nx])/2.;          // On fait 3 calculs on pourrait en faire qu'1 et récupérer les valeurs déjà calculé
-    // double Ti = (T[(i)*Nx]+T[(i+1)*Nx])/2.;
-    // double Tip1 = (T[(i+2)*Nx]+T[(i+1)*Nx])/2.;
-
-    double Tim1 = T[(i-1)*Nx];                            // On fait 3 calculs on pourrait en faire qu'1 et récupérer les valeurs déjà calculé
+    double Tim1 = T[(i-1)*Nx];   // On fait 3 calculs on pourrait en faire qu'1 et récupérer les valeurs déjà calculé
     double Ti =  T[i*Nx];
     double Tip1 =  T[(i+1)*Nx];
 
