@@ -23,50 +23,50 @@ _df(data_file)
     _Dy(i) =_df->Get_dy();
     _Y(i+1) = _Y(i)+_df->Get_dy();
   }
-/*
+  /*
   ////////////////////////////Nouveau pour le test
   int i=0;
   ifstream fichier("Eulerexplicite_ci_1_cl_1_L_0._tmax_4.0_imax_1000.dat", ios::in);  //Ouverture d'un fichier en lecture
   if(fichier)
   {
-    string ligne; //Une variable pour stocker les lignes lues
-    double number1, number2;
+  string ligne; //Une variable pour stocker les lignes lues
+  double number1, number2;
 
-    _Y.resize(1001);
-    _T.resize(1001);
-    _Dy.resize(1000);
-    while (fichier >> number1 >> number2)
-    {
-      _Y(i)=number1;
-      _T(i)=number2;
-      cout << _Y(i) << " " << _T(i) << endl;
-      i=i+1;
-    }
-    // while(getline(fichier, ligne)) //Tant qu'on n'est pas à la fin, on lit
-    // {
-    //   double a, b;
-    //    cout << ligne << endl;
-    //    fichier >> a >> b;
-    //    cout << a << b << endl;
-    //    // fichier >>_Y(i) >> _T(i);
-    //    // cout << _Y(i) << _T(i);
-    //    //Et on l'affiche dans la console
-    //    //Ou alors on fait quelque chose avec cette ligne
-    //    //À vous de voir
-    //  }
-
-  }
-  else
+  _Y.resize(1001);
+  _T.resize(1001);
+  _Dy.resize(1000);
+  while (fichier >> number1 >> number2)
   {
-    cout << "ERREUR: Impossible d'ouvrir le fichier en lecture." << endl;
-  }
+  _Y(i)=number1;
+  _T(i)=number2;
+  cout << _Y(i) << " " << _T(i) << endl;
+  i=i+1;
+}
+// while(getline(fichier, ligne)) //Tant qu'on n'est pas à la fin, on lit
+// {
+//   double a, b;
+//    cout << ligne << endl;
+//    fichier >> a >> b;
+//    cout << a << b << endl;
+//    // fichier >>_Y(i) >> _T(i);
+//    // cout << _Y(i) << _T(i);
+//    //Et on l'affiche dans la console
+//    //Ou alors on fait quelque chose avec cette ligne
+//    //À vous de voir
+//  }
+
+}
+else
+{
+cout << "ERREUR: Impossible d'ouvrir le fichier en lecture." << endl;
+}
 */
 }
 
 void Mesh_Adapt::Update(VectorXd rho)
 {
-  //calcul u
 
+  //Initialisation
   int Nx = _df->Get_Nx();
   int Ny = _df->Get_Ny();
   double Ly = _df->Get_ymax();
@@ -75,25 +75,8 @@ void Mesh_Adapt::Update(VectorXd rho)
   VectorXd K(Ny);
   _rho= rho;
 
-  // for (int i=0; i<Ny+1;i++)
-  // {
-  //   //double nu = 2;
-  //   //double c = 1;
-  //   //U2(i)=c*exp(c*_Y(i)/(nu-1))/((nu-1)*(1-exp(c/nu)));
-  //   U2(i)=25*exp(-(_Y(i)-0.005)*(_Y(i)-0.005)/(2*0.0002*0.0002));
-  // }
-  // //---------------Affichage test ------------------------------------------------
-  //
-  //   //On trace la D2, sur un maillage uniforme
-  //   save_vector(U2,_Y, "test_d2T0.dat");
-  //   //On trace la valeur de la Température
-  //   save_vector(T,_Y, "test_T.dat");// ne marche pas car T = Ty
-  //   //cout << "Dy : " << _Dy<< endl;
-  //
-  // //------------------------------------------------------------------------------
+  //calcul la dérivée seconde
   U2=Derive_y_2(_rho); // dérivée seconde selon y en x = dx, aux noeuds du maillaage
-
-
 
   //calcul des coefficient de raideur ki
   for (int i=0 ; i<metric.size(); i++)  //Calcul de la métrique
@@ -101,8 +84,6 @@ void Mesh_Adapt::Update(VectorXd rho)
     double minimum = 0.01;
     metric(i)= sqrt( max(U2(i),minimum));
   }
-
-  save_vector(metric,_Y, "test_Metric");
 
   for (int i=0 ; i<K.size(); i++)  //Calcul de K
   {
@@ -115,7 +96,7 @@ void Mesh_Adapt::Update(VectorXd rho)
   VectorXd b(Ny-1), Ysolv(Ny-1);
   vector<Triplet<double>> triplets;
   SparseLU<SparseMatrix<double>, COLAMDOrdering<int> > solver;
-  double coeff = 1;
+  double coeff = 1e12;
   b.setZero();
   b(b.size()-1)=coeff*K(K.size()-1)*Ly;
 
@@ -144,13 +125,13 @@ void Mesh_Adapt::Update(VectorXd rho)
 
   Ysolv = solver.solve(b);
 
-  for (int i=1; i<_Y.size()-1;i++) //On remplit M
+  for (int i=1; i<_Y.size()-1;i++) //On remplit _Y
   {
     _Y(i)=Ysolv(i-1);
   }
 
 
-  // On détermine les _Dy a partir des nouveaux _Y
+  // On détermine les _Dy a partir des nouveaux _Y calculés
   for (int i=0;i<_Dy.size();i++)
   {
     _Dy(i)= _Y(i+1)-_Y(i);
@@ -160,29 +141,6 @@ void Mesh_Adapt::Update(VectorXd rho)
 
     }
   }
-  for (int i=0; i<Ny+1;i++)
-  {
-    //double nu = 2;
-    //double c = 1;
-    //U2(i)=c*exp(c*_Y(i)/(nu-1))/((nu-1)*(1-exp(c/nu)));
-    U2(i)=25*exp(-(_Y(i)-0.005)*(_Y(i)-0.005)/(2*0.0002*0.0002));
-  }
-  save_vector(U2,_Y, "test_d2T0.dat");
-  //
-  // // test de la fonction derive2 pour un maillage non uniforme
-  // cout << "debut test derive" << endl;
-  // VectorXd F(Ny+1), F2(Ny+1), Fexact(Ny+1);
-  // for (int i=0 ; i<Ny+1 ; i++)
-  // {
-  //   F(i) = pow(_Y(i),3);
-  //   Fexact(i) = 6*_Y(i);
-  // }
-  // F2 = Derive_y_2(F);
-  // cout << "save"<<endl;
-  // save_vector(F, _Y, "fonction.dat");
-  // save_vector(Fexact, _Y, "fonctionE.dat");
-  // save_vector(F2, _Y, "fonction2.dat");
-  //
 }
 
 
@@ -211,6 +169,7 @@ VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T)
   derive2(0) = derive2(2);
   derive2(1) = derive2(2);
   derive2(derive2.size()-1) = derive2(derive2.size()-3);
+  derive2(derive2.size()-2) = derive2(derive2.size()-3);
   return derive2;
 }
 
@@ -270,9 +229,9 @@ void Mesh_Adapt::save_vector(Eigen::VectorXd U, Eigen::VectorXd Y, std::string a
   //cout << "Dans le fichier "+a+" le vecteur U est de taill "<<U.size()<<" et Y est de taille "<<Y.size()<<endl;
   ofstream flux;
   flux.open(a);
-  for (int i=0; i<Y.size();i++)
+  for (int i=0; i<Y.size()-1;i++)
   {
-    flux << Y(i) << " " << U(i) << endl;
+    flux << Y(i) << " " << U(i*_df->Get_Nx()) << endl;
   }
 
   flux.close();

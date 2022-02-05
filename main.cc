@@ -107,9 +107,10 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
     //Savoir comment faire ????
     if (maillage=="adapt")
     {
-      mesh_adapt->Update(temp);
+      mesh_adapt->Update(rho);
     }
-    for (int i = 0; i <= 4 ; i++)
+
+    for (int i = 0; i <= 4 ; i++) // Sauvegarde des valeurs à 1mm 2mm etc du bord
     {
       templist[i] << tn << " " << temp(Nylist[i]) << endl;
       if (data_file->Get_Aref()!=0.)
