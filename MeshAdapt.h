@@ -1,6 +1,6 @@
 #ifndef _MESHADAPT_H
 
-#include "DataFile.h"
+#include "Solution.h"
 #include "Dense"
 #include "Sparse"
 
@@ -9,7 +9,7 @@
 class Mesh_Adapt
  {
  private:
-  Eigen::VectorXd _rho;
+  Eigen::VectorXd _rho; // Un NewClass
   Eigen::VectorXd _Dy;
   Eigen::VectorXd _Y;
   DataFile* _df;
@@ -20,8 +20,8 @@ class Mesh_Adapt
   void save_vector_mesh(Eigen::VectorXd Y, std::string a);
   void save_vector(Eigen::VectorXd U, Eigen::VectorXd Y, std::string a); // pour voir U2
   const Eigen::VectorXd Get_Dy() const {return _Dy;};
-  int cellule (double distance); 
+  int cellule (double distance);
 };
 
-#define _MESHADAPT_CPP
+#define _MESHADAPT_H
 #endif
