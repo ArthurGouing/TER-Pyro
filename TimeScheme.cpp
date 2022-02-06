@@ -31,13 +31,14 @@ void TimeScheme::InitialCondition()
 	double dy = _df->Get_dy();
 	double xmin = _df->Get_xmin();
   double ymin = _df->Get_ymin();
-	_sol.resize(Nx*Ny);
+	_sol.Get_T().resize(Nx*Ny);//inutile
 
 	for (int j=0; j<Ny; ++j)
 	{
 		for (int i=0; i<Nx; ++i)
 		{
-			_sol(j*Nx+i)=_fin_vol->Get_fct()->InitialCondition((i+1)*dx+xmin,(j+1)*dy+ymin);
+			_sol.T(j*Nx+i)=_fin_vol->Get_fct()->InitialCondition((i+1)*dx+xmin,(j+1)*dy+ymin);
+			//écriture plus simple avec la surcharge de la fonction T(doublex, double y)
 		}
 	}
 	// cout << "-------------------------------" << endl;
@@ -45,14 +46,14 @@ void TimeScheme::InitialCondition()
 	// cout << _sol << endl;
 	// cout << "-------------------------------" << endl;
 
-	_rho.resize(Nx*Ny);
+	_sol.Get_rho().resize(Nx*Ny);//inutile
 
 	//Ajout d'un vecteur masse volumique
 	for (int j=0; j<Ny; ++j)
 	{
 		for (int i=0; i<Nx; ++i)
 		{
-			_rho(j*Nx+i)=_fin_vol->Get_fct()->InitialConditionrho((i+1)*dx+xmin,(j+1)*dy+ymin);
+			_sol.rho(j*Nx+i)=_fin_vol->Get_fct()->InitialConditionrho((i+1)*dx+xmin,(j+1)*dy+ymin);
 		}
 	}
 }
@@ -91,7 +92,7 @@ void ImplicitEulerScheme::Advance()
 	_solver_direct.factorize(A);
 
 	b=_sol+BC_RHS;
-	_sol=_solver_direct.solve(b);
+	_sol.Get_T()=_solver_direct.solve(b);
 
 
 	//Calcul de rhon+1
@@ -100,7 +101,7 @@ void ImplicitEulerScheme::Advance()
 	double B = rhov*Aref*dt/(rhov-rhop);
 	for (int i=0; i<_rho.size() ;i++)
 	{
-		_rho(i)=(_rho(i)+B*rhop*exp(-Ta/_sol(i)))/(1.+B*exp(-Ta/_sol(i)));
+		_sol.rho(i)=(_sol.rho(i)+B*rhop*exp(-Ta/_sol.T(i)))/(1.+B*exp(-Ta/_sol.T(i)));//c'est la méthode rho(double n)
 	}
 
 
@@ -113,20 +114,10 @@ void ImplicitEulerScheme::Advance()
 }
 
 
-const Eigen::VectorXd & TimeScheme::GetSolution() const
+
+void TimeScheme::SaveSol(Solution sol, string n_sol, int n)
 {
-  return _sol;
-}
 
-
-const Eigen::VectorXd & TimeScheme::GetSolutionrho() const
-{
-  return _rho;
-}
-
-
-void TimeScheme::SaveSol(Eigen::VectorXd sol, string n_sol, int n)
-{
 	string n_file = _df->Get_results() + "/" + n_sol + to_string(n) + ".vtk";
 	ofstream solution;
 	solution.open(n_file, ios::out);
@@ -148,7 +139,7 @@ void TimeScheme::SaveSol(Eigen::VectorXd sol, string n_sol, int n)
 	{
 		for(int i=0; i<Nx; ++i)
 		{
-			solution << sol(i+j*Nx) << " ";
+			solution << sol.T(i+j*Nx) << " ";
 		}
 		solution << endl;
 	}

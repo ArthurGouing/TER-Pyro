@@ -28,6 +28,7 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   TimeScheme* time_scheme = NULL;
   time_scheme = new ImplicitEulerScheme(data_file, fin_vol);
 
+  Solution Solution_tn;
   Eigen::VectorXd temp, rho;
   double tn=data_file->Get_t0(), dt=data_file->Get_dt();
   string maillage=data_file->Get_scenario(), scenario=data_file->Get_results();
@@ -78,9 +79,9 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   cout << "                                                  " << ::endl;
   cout << "--------------------------------------------------" << endl;
   cout << "------------ Save initial condition --------------" << endl;
-  time_scheme->SaveSol(time_scheme->GetSolution(),"ImpliciteScheme", 0); //peut être que ca va déconner avec le fait de pas utiliser une varibale
-  temp=time_scheme->GetSolution();
-  rho=time_scheme->GetSolutionrho();
+  time_scheme->SaveSol(time_scheme->Get_Solution(),"ImpliciteScheme", 0); //peut être que ca va déconner avec le fait de pas utiliser une varibale
+  temp=time_scheme->Get_Solution().Get_T();
+  rho=time_scheme->Get_Solution().Get_rho();
   for (int i = 0; i <= 4 ; i++)
   {
     templist[i] << 0. << " " << temp(Nylist[i]) << endl;
@@ -101,13 +102,14 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
     tn=n*dt;
     cout << "Iteration : " << n << " Temps : " << tn << " s" << endl;
     time_scheme->Advance();
-    time_scheme->SaveSol(time_scheme->GetSolution(),"ImpliciteScheme", n);
-    temp=time_scheme->GetSolution();
-    rho=time_scheme->GetSolutionrho();
+    time_scheme->SaveSol(time_scheme->Get_Solution(),"ImpliciteScheme", n);
+    temp = time_scheme->Get_Solution().Get_T();
+    rho  = time_scheme->Get_Solution().Get_rho();
+    //Solution_tn = time_scheme->Get_Solution();
     //Savoir comment faire ????
     if (maillage=="adapt")
     {
-      mesh_adapt->Update(temp);
+      mesh_adapt->Update(rho); // remplacer par le rho de la class Solution
     }
     for (int i = 0; i <= 4 ; i++)
     {

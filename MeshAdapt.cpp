@@ -22,47 +22,10 @@ _df(data_file)
     _Dy(i) =_df->Get_dy();
     _Y(i+1) = _Y(i)+_df->Get_dy();
   }
-/*
-  ////////////////////////////Nouveau pour le test
-  int i=0;
-  ifstream fichier("Eulerexplicite_ci_1_cl_1_L_0._tmax_4.0_imax_1000.dat", ios::in);  //Ouverture d'un fichier en lecture
-  if(fichier)
-  {
-    string ligne; //Une variable pour stocker les lignes lues
-    double number1, number2;
 
-    _Y.resize(1001);
-    _T.resize(1001);
-    _Dy.resize(1000);
-    while (fichier >> number1 >> number2)
-    {
-      _Y(i)=number1;
-      _T(i)=number2;
-      cout << _Y(i) << " " << _T(i) << endl;
-      i=i+1;
-    }
-    // while(getline(fichier, ligne)) //Tant qu'on n'est pas à la fin, on lit
-    // {
-    //   double a, b;
-    //    cout << ligne << endl;
-    //    fichier >> a >> b;
-    //    cout << a << b << endl;
-    //    // fichier >>_Y(i) >> _T(i);
-    //    // cout << _Y(i) << _T(i);
-    //    //Et on l'affiche dans la console
-    //    //Ou alors on fait quelque chose avec cette ligne
-    //    //À vous de voir
-    //  }
-
-  }
-  else
-  {
-    cout << "ERREUR: Impossible d'ouvrir le fichier en lecture." << endl;
-  }
-*/
 }
 
-void Mesh_Adapt::Update(VectorXd rho)
+void Mesh_Adapt::Update(Solution & sol)//Soluiton sol en entré
 {
   //calcul u
 
@@ -72,27 +35,9 @@ void Mesh_Adapt::Update(VectorXd rho)
   VectorXd U2(Ny+1);
   VectorXd metric(Ny+1);
   VectorXd K(Ny);
-  _rho= rho;
+  _rho= sol->Get_rho(); // inutile ?
 
-  // for (int i=0; i<Ny+1;i++)
-  // {
-  //   //double nu = 2;
-  //   //double c = 1;
-  //   //U2(i)=c*exp(c*_Y(i)/(nu-1))/((nu-1)*(1-exp(c/nu)));
-  //   U2(i)=25*exp(-(_Y(i)-0.005)*(_Y(i)-0.005)/(2*0.0002*0.0002));
-  // }
-  // //---------------Affichage test ------------------------------------------------
-  //
-  //   //On trace la D2, sur un maillage uniforme
-  //   save_vector(U2,_Y, "test_d2T0.dat");
-  //   //On trace la valeur de la Température
-  //   save_vector(T,_Y, "test_T.dat");// ne marche pas car T = Ty
-  //   //cout << "Dy : " << _Dy<< endl;
-  //
-  // //------------------------------------------------------------------------------
   U2=Derive_y_2(_rho); // dérivée seconde selon y en x = dx, aux noeuds du maillaage
-
-
 
   //calcul des coefficient de raideur ki
   for (int i=0 ; i<metric.size(); i++)  //Calcul de la métrique
@@ -185,7 +130,7 @@ void Mesh_Adapt::Update(VectorXd rho)
 }
 
 
-VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T)
+VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T) // T de taille Nx*Ny
 {
 
   int Ny = _df->Get_Ny();
@@ -198,7 +143,7 @@ VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T)
     // double Ti = (T[(i)*Nx]+T[(i+1)*Nx])/2.;
     // double Tip1 = (T[(i+2)*Nx]+T[(i+1)*Nx])/2.;
 
-    double Tim1 = T[(i-1)*Nx];                            // On fait 3 calculs on pourrait en faire qu'1 et récupérer les valeurs déjà calculé
+    double Tim1 = T[(i-1)*Nx]; // On fait 3 calculs on pourrait en faire qu'1 et récupérer les valeurs déjà calculé
     double Ti =  T[i*Nx];
     double Tip1 =  T[(i+1)*Nx];
 
