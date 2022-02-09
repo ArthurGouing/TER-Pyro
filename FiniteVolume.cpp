@@ -47,12 +47,14 @@ void FiniteVolume::Build_flux_mat(VectorXd rho, VectorXd rhostar)
 
 	//------------------------------ Fx, Fy ----------------------------------//
 	double Fx;
-	VectorXd Fy(Ny);
+	VectorXd Fy(Ny) , My(Ny-1);
 	Fx=1./pow(dx,2);
-	for (int i=0; i<Ny ; i++)
+	for (int i=0; i<Ny-1 ; i++)
 	{
-		Fy(i)=1./pow(Dy(i),2);
+		Fy(i)=1./Dy(i);
+		My(i)=2./(Dy(i)+Dy(i+1));
 	}
+	Fy(Ny-1)=1./Dy(Ny-1);
 
 	//------------------Id+sigma*dt*H ou Idtilde+sigmak*dt*H-------------------//
 	_mat_flux.resize(Nx*Ny,Nx*Ny);
@@ -73,10 +75,10 @@ void FiniteVolume::Build_flux_mat(VectorXd rho, VectorXd rhostar)
 	{
 		for (int k=1; k<=Ny-1; ++k) //on se balade suivant les arrêtes suivant une colonne
 		{
-			triplets.push_back({i+(k-1)*Nx-1,i+(k-1)*Nx-1,sigma(i+(k-1)*Nx-1)*Fy(k-1)});
-			triplets.push_back({i+(k-1)*Nx-1,i+(k-1)*Nx+Nx-1,sigma(i+(k-1)*Nx-1)*-Fy(k-1)});
-			triplets.push_back({i+(k-1)*Nx+Nx-1,i+(k-1)*Nx+Nx-1,sigma(i+(k-1)*Nx+Nx-1)*Fy(k)});
-			triplets.push_back({i+(k-1)*Nx+Nx-1,i+(k-1)*Nx-1,sigma(i+(k-1)*Nx+Nx-1)*-Fy(k)});
+			triplets.push_back({i+(k-1)*Nx-1,i+(k-1)*Nx-1,sigma(i+(k-1)*Nx-1)*Fy(k-1)*My(k-1)});
+			triplets.push_back({i+(k-1)*Nx-1,i+(k-1)*Nx+Nx-1,sigma(i+(k-1)*Nx-1)*-Fy(k-1)*My(k-1)});
+			triplets.push_back({i+(k-1)*Nx+Nx-1,i+(k-1)*Nx+Nx-1,sigma(i+(k-1)*Nx+Nx-1)*Fy(k)*My(k-1)});
+			triplets.push_back({i+(k-1)*Nx+Nx-1,i+(k-1)*Nx-1,sigma(i+(k-1)*Nx+Nx-1)*-Fy(k)*My(k-1)});
 		}
 	}
 	_mat_flux.setFromTriplets(triplets.begin(), triplets.end());

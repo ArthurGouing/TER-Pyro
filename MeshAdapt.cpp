@@ -17,12 +17,18 @@ _df(data_file)
   _Dy.resize(_df->Get_Ny()); //taille de Dy=nombre de cases verticales
   _Y.resize(_df->Get_Ny()+1);
   _Y(0)=0.;
-  for (int i=0; i<_Dy.size(); i++)
+  if (_df->Get_CastestnonUnif() == "oui")
   {
-    _Dy(i) =_df->Get_dy();
-    _Y(i+1) = _Y(i)+_df->Get_dy();
+    Maillage_non_uniforme();
   }
-
+  else
+  {
+    for (int i=0; i<_Dy.size(); i++)
+    {
+      _Dy(i) =_df->Get_dy();
+      _Y(i+1) = _Y(i)+_df->Get_dy();
+    }
+  }
   ////////////////////////////Nouveau pour le test
   int i=0;
   ifstream fichier("Eulerexplicite_ci_1_cl_1_L_0._tmax_4.0_imax_1000.dat", ios::in);  //Ouverture d'un fichier en lecture
@@ -59,6 +65,40 @@ _df(data_file)
   {
     cout << "ERREUR: Impossible d'ouvrir le fichier en lecture." << endl;
   }
+
+}
+
+// void Mesh_Adapt::Maillage_non_uniforme()
+// {
+//   double length(0) , pas(_df->Get_dy()*(1./_df->Get_Ny()));
+//
+//   for (int i = 1 ; i<=_df->Get_Ny()/2; i++)
+//   {
+//     _Dy(_df->Get_Ny()/2-i)=_df->Get_dy()-i*pas;
+//     length+=_Dy(i);
+//   }
+//   for (int i = 1 ; i<=_df->Get_Ny()/2; i++)
+//   {
+//       _Dy(_df->Get_Ny()/2-1+i)=_df->Get_dy()+i*pas;
+//     length+=_Dy(i);
+//   }
+//   cout <<"la longueur totale suivant y est " << length << endl;
+//
+// }
+
+
+void Mesh_Adapt::Maillage_non_uniforme()
+{
+  double a , Ny=_df->Get_Ny() , dy=_df->Get_dy() , taille=Ny*dy , length(0);
+  a=(taille-dy/2.*Ny)/(Ny*Ny-Ny*(Ny+1)/2.);
+  for (int i=0 ; i<Ny ;  i++ )
+  {
+    _Dy(i)=(Ny-i-1)*a+dy/2.;
+    cout << _Dy(i) << endl;
+    length+=_Dy(i);
+  }
+  cout <<"la longueur totale suivant y est " << length << endl;
+
 
 }
 

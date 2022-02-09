@@ -28,7 +28,7 @@ private:
   std::string _scheme;
   std::string _which_scenario;
   std::string _results;
-  std::string _LBC, _RBC, _DBC, _UBC;
+  std::string _LBC, _RBC, _DBC, _UBC , _CastestnonUnif;
   // Nom du fichier de données
   const std::string _file_name;
   // Pour savoir si l'utilisateur a donné la valeur du paramètres
@@ -77,6 +77,7 @@ public:
   const std::string & Get_RBC() const {return _RBC;};
   const std::string & Get_DBC() const {return _DBC;};
   const std::string & Get_UBC() const {return _UBC;};
+  const std::string & Get_CastestnonUnif() const {return _CastestnonUnif;};
   const std::string Get_scenario() const {return _which_scenario;};
 };
 

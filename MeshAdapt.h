@@ -15,6 +15,7 @@ class Mesh_Adapt
   DataFile* _df;
  public:
   Mesh_Adapt(DataFile* data_file);
+  void Maillage_non_uniforme();
   void Update(Eigen::VectorXd T);
   Eigen::VectorXd Derive_y_2(Eigen::VectorXd T);
   void save_vector_mesh(Eigen::VectorXd Y, std::string a);
