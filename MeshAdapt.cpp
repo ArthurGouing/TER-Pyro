@@ -35,7 +35,7 @@ void Mesh_Adapt::Update(Solution & sol)//Soluiton sol en entré
   VectorXd U2(Ny+1);
   VectorXd metric(Ny+1);
   VectorXd K(Ny);
-  _rho= sol->Get_rho(); // inutile ?
+  _rho= sol.Get_rho(); // inutile ?
 
   U2=Derive_y_2(_rho); // dérivée seconde selon y en x = dx, aux noeuds du maillaage
 

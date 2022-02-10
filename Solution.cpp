@@ -5,7 +5,5 @@
 
 
 
-
-
 #define _SOLUTION_CPP
 #endif

@@ -14,7 +14,9 @@ class Solution
  {
  private:
   Eigen::VectorXd _T;
+  Eigen::VectorXd *_Tpointeur = NULL;
   Eigen::VectorXd _rho;
+  Eigen::VectorXd _rhostar;
  public:
    //Constructeur
    Solution();
@@ -29,8 +31,11 @@ class Solution
    Eigen::VectorXd Get_Tx(); //le vecteur de taille Nx ...
 
    //idem avec rho
+   double rho(double n);
+   Eigen::VectorXd Get_rho(){return _rho;};
    //et rho* ?
-
+   double rhostar(double n);
+   Eigen::VectorXd Get_rhostar(){return _rhostar;};
 
 
 

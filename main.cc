@@ -109,7 +109,7 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
     //Savoir comment faire ????
     if (maillage=="adapt")
     {
-      mesh_adapt->Update(rho); // remplacer par le rho de la class Solution
+      mesh_adapt->Update(Solution_tn); // remplacer par le rho de la class Solution
     }
     for (int i = 0; i <= 4 ; i++)
     {

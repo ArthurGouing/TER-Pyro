@@ -31,14 +31,16 @@ void TimeScheme::InitialCondition()
 	double dy = _df->Get_dy();
 	double xmin = _df->Get_xmin();
   double ymin = _df->Get_ymin();
-	_sol.Get_T().resize(Nx*Ny);//inutile
+	_sol.Get_T().resize(Nx*Ny);//inutile et ne compile pas ?????
 
 	for (int j=0; j<Ny; ++j)
 	{
 		for (int i=0; i<Nx; ++i)
 		{
-			_sol.T(j*Nx+i)=_fin_vol->Get_fct()->InitialCondition((i+1)*dx+xmin,(j+1)*dy+ymin);
+			_sol.T(j*Nx+i) =_fin_vol->Get_fct()->InitialCondition((i+1)*dx+xmin,(j+1)*dy+ymin);
 			//écriture plus simple avec la surcharge de la fonction T(doublex, double y)
+			//faudra faire un set et surchager le =
+			
 		}
 	}
 	// cout << "-------------------------------" << endl;
@@ -54,6 +56,8 @@ void TimeScheme::InitialCondition()
 		for (int i=0; i<Nx; ++i)
 		{
 			_sol.rho(j*Nx+i)=_fin_vol->Get_fct()->InitialConditionrho((i+1)*dx+xmin,(j+1)*dy+ymin);
+			//ca aussi, je suis pas sur que ca compile ...
+			//faudra faire un set et surchager le =
 		}
 	}
 }
@@ -78,30 +82,31 @@ void ImplicitEulerScheme::Advance()
 
 	//Calcul de _rhostar
 	Eigen::VectorXd Arr;
-	Arr=_fin_vol->Get_fct()->Arrhenius(_rho,_sol);
-	_rhostar=_rho+dt*Arr;
+	Arr=_fin_vol->Get_fct()->Arrhenius(_sol.Get_rho(),_sol.Get_T());
+	_sol.Get_rhostar()=_sol.Get_rho()+dt*Arr; // ne compile pas ?, il faut une fonction set ???
 
 
 	//Calcul de Tn+1
-	_fin_vol->Build_flux_mat(_rho,_rhostar); //Build_flux_mat_and_BC_RHS(_t);
-	_fin_vol->Build_BC_RHS(_t,_rho,_rhostar);
+	_fin_vol->Build_flux_mat(_sol.Get_rho(),_sol.Get_rhostar()); //Build_flux_mat_and_BC_RHS(_t);
+	_fin_vol->Build_BC_RHS(_t,_sol.Get_rho(),_sol.Get_rhostar());
 	Eigen::VectorXd BC_RHS=_fin_vol->Get_BC_RHS();
 	SparseMatrix<double> A=_fin_vol->Get_mat_flux();
 	Eigen::VectorXd b;
 	_solver_direct.analyzePattern(A);
 	_solver_direct.factorize(A);
 
-	b=_sol+BC_RHS;
+	b=_sol.Get_T()+BC_RHS;
 	_sol.Get_T()=_solver_direct.solve(b);
 
 
 	//Calcul de rhon+1
 	double Aref=_df->Get_Aref(), Ta=_df->Get_Ta(), rhov=_df->Get_rhov(), rhop=_df->Get_rhop();
-	Arr=_fin_vol->Get_fct()->Arrhenius(_rhostar,_sol);
+	Arr=_fin_vol->Get_fct()->Arrhenius(_sol.Get_rhostar(),_sol.Get_T());
 	double B = rhov*Aref*dt/(rhov-rhop);
-	for (int i=0; i<_rho.size() ;i++)
+	for (int i=0; i<_sol.Get_rho().size() ;i++)
 	{
 		_sol.rho(i)=(_sol.rho(i)+B*rhop*exp(-Ta/_sol.T(i)))/(1.+B*exp(-Ta/_sol.T(i)));//c'est la méthode rho(double n)
+		// ne compile pas ?
 	}
 
 

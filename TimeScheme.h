@@ -33,7 +33,7 @@ public:
   const Eigen::VectorXd & GetSolution() const;
   const Eigen::VectorXd & GetSolutionrho() const; // Inutile à cause de la class S
   */
-  Solution & Get_Solution() const{return _sol;};
+  Solution & Get_Solution(){return _sol;};
 };
 
 
