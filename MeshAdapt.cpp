@@ -323,7 +323,24 @@ int Mesh_Adapt::cellule(double distance) //A changer surement avec l'adaptation 
 {
   int Nx=_df->Get_Nx(), Ny=_df->Get_Ny();
   double dy = _df->Get_dy();
-  int Nydist = (Nx*(Ny-int(ceil(distance/dy)))-1);
+  int Nydist; //(Nx*(Ny-int(ceil(distance/dy)))-1);
+  double sommedist = 0., sommedist2=0.;
+  int i=0;
+
+  while (sommedist<=distance)
+  {
+    sommedist+=_Dy(Ny-1-i);
+    i+=1;
+  }
+  sommedist2=sommedist-_Dy(Ny-1-(i-1));
+  if (abs(sommedist2-distance)<abs(sommedist-distance))
+  {
+    Nydist = (Nx*(Ny-(i-1))-1);
+  }
+  else
+  {
+    Nydist = (Nx*(Ny-i)-1);
+  }
 
   return Nydist;
 }
