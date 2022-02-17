@@ -30,6 +30,7 @@ public:
   Eigen::VectorXd Get_T(){return _T;};  //le vecteur de taille Nx*Ny
   Eigen::VectorXd Get_Ty(int i); //le vecteur de taille Ny ...
   Eigen::VectorXd Get_Tx(int j); //le vecteur de taille Nx ...
+  void Set_T(int n, double a){_T(n) = a;}
 
   //idem avec rho
   double rho(int i, int j);
@@ -39,6 +40,7 @@ public:
   Eigen::VectorXd Get_rho(){return _rho;};
   Eigen::VectorXd Get_rhoy(int i); //le vecteur de taille Ny ...
   Eigen::VectorXd Get_rhox(int j); //le vecteur de taille Nx ...
+  void Set_rho(int n, double a){_rho(n) = a;}
 
 
   //et rho* ?
@@ -49,6 +51,7 @@ public:
   Eigen::VectorXd Get_rhostar(){return _rhostar;};
   Eigen::VectorXd Get_rhostary(int i); //le vecteur de taille Ny ...
   Eigen::VectorXd Get_rhostarx(int j); //le vecteur de taille Nx ...
+  void Set_rhostar(int n, double a){_rhostar(n) = a;}
 };
 
 #define _SOLUTION_H

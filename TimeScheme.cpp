@@ -37,9 +37,8 @@ void TimeScheme::InitialCondition()
 	{
 		for (int i=0; i<Nx; ++i)
 		{
-			_sol.T(j*Nx+i) =_fin_vol->Get_fct()->InitialCondition((i+1)*dx+xmin,(j+1)*dy+ymin);
-			//écriture plus simple avec la surcharge de la fonction T(doublex, double y)
-			//faudra faire un set et surchager le =
+			//_sol.T(j*Nx+i) =_fin_vol->Get_fct()->InitialCondition((i+1)*dx+xmin,(j+1)*dy+ymin);
+			_sol.Set_T(j*Nx+i, _fin_vol->Get_fct()->InitialCondition((i+1)*dx+xmin,(j+1)*dy+ymin));
 
 		}
 	}
@@ -55,9 +54,8 @@ void TimeScheme::InitialCondition()
 	{
 		for (int i=0; i<Nx; ++i)
 		{
-			_sol.rho(j*Nx+i)=_fin_vol->Get_fct()->InitialConditionrho((i+1)*dx+xmin,(j+1)*dy+ymin);
-			//ca aussi, je suis pas sur que ca compile ...
-			//faudra faire un set et surchager le =
+			//_sol.rho(j*Nx+i)=_fin_vol->Get_fct()->InitialConditionrho((i+1)*dx+xmin,(j+1)*dy+ymin);
+			_sol.Set_rho(j*Nx+i, _fin_vol->Get_fct()->InitialConditionrho((i+1)*dx+xmin,(j+1)*dy+ymin));
 		}
 	}
 }
@@ -106,8 +104,8 @@ void ImplicitEulerScheme::Advance()
 	double B = rhov*Aref*dt/(rhov-rhop);
 	for (int i=0; i<_sol.Get_rho().size() ;i++)
 	{
-		_sol.rho(i)=(_sol.rho(i)+B*rhop*exp(-Ta/_sol.T(i)))/(1.+B*exp(-Ta/_sol.T(i)));//c'est la méthode rho(double n)
-		// ne compile pas ?
+		//_sol.rho(i)=(_sol.rho(i)+B*rhop*exp(-Ta/_sol.T(i)))/(1.+B*exp(-Ta/_sol.T(i)));//c'est la méthode rho(double n)
+		_sol.Set_rho(i, (_sol.rho(i)+B*rhop*exp(-Ta/_sol.T(i)))/(1.+B*exp(-Ta/_sol.T(i))));
 	}
 
 
