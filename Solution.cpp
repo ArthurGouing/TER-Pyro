@@ -11,5 +11,44 @@ Solution::Solution()
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Solution::Eigen::VectorXd Get_Ty(int i)
+{
+  Eigen::VectorXd Ty;
+  Ty.resize(_df->Get_Ny());
+}
+
+
 #define _SOLUTION_CPP
 #endif
