@@ -5,21 +5,14 @@
 Solution::Solution(data_file):
 df(data_file)
 {
-<<<<<<< HEAD
   _T.resize(df->Get_Nx()) * df->Get_Ny());
   _rho.resize(df->Get_Nx()) * df->Get_Ny());
   _rhostar.resize(df->Get_Nx()) * df->Get_Ny());
-=======
-  _T.resize(_df->Get_Nx()) * _df->Get_Ny())
-  _rho.resize(_df->Get_Nx()) * _df->Get_Ny())
-  _rhostar.resize(_df->Get_Nx()) * _df->Get_Ny())
->>>>>>> e03658955170f057c746233fe8a191fb94400ae1
 }
 
 Solution :: doouble T(double n)
 {
   return _T(n);
-<<<<<<< HEAD
 }
 
 Solution :: double T(int i, int j) //i la ligne et j la colonne
@@ -58,8 +51,6 @@ Solution :: double rho_case(double x, double y)
   i=int(x/dx)+1;
   j=int(y/dy)+1;
   return rho(i,j);
-=======
->>>>>>> e03658955170f057c746233fe8a191fb94400ae1
 }
 
 
@@ -83,33 +74,6 @@ Solution :: double rhostar_case(double x, double y)
   j=int(y/dy)+1;
   return rhostar(i,j);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 Solution::Eigen::VectorXd Get_Ty(int j)//Le vecteur de la colonne j
