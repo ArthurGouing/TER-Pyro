@@ -11,7 +11,7 @@ using namespace std;
 
 // Constructeur par défaut (ne pas oublier de mettre votre pointeur à 0 !!)
 TimeScheme::TimeScheme(DataFile* data_file, FiniteVolume* fin_vol) :
-_df(data_file), _fin_vol(fin_vol), _t(_df->Get_t0())
+_df(data_file), _fin_vol(fin_vol), _t(_df->Get_t0()), _sol(data_file)
 {
 	InitialCondition();
 }
