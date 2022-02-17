@@ -28,7 +28,7 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   TimeScheme* time_scheme = NULL;
   time_scheme = new ImplicitEulerScheme(data_file, fin_vol);
 
-  Solution Solution_tn;
+  Solution Solution_tn(data_file);
   Eigen::VectorXd temp, rho;
   double tn=data_file->Get_t0(), dt=data_file->Get_dt();
   string maillage=data_file->Get_scenario(), scenario=data_file->Get_results();
