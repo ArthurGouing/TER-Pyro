@@ -7,6 +7,7 @@ _df(data_file)
 {
   T.resize(_df->Get_Nx() * _df->Get_Ny());
   rho.resize(_df->Get_Nx() * _df->Get_Ny());
+  if (abs(_df->Get_Aerf())>1e-16)
   rhostar.resize(_df->Get_Nx() * _df->Get_Ny());
 }
 

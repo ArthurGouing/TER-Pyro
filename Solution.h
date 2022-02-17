@@ -1,9 +1,7 @@
 #ifndef _SOLUTION_H
 
-/*la class Solution est utilisé dans les fichier functions ; ou pas
-J'ai pas modifié les _sol et _rho dans la partie Euler Implicit de TimeScheme
-on verra comment on fait avec _rhostar
-le reste devrait être bon*/
+/*lLes fonction Get et Set sonnt à suprrimer une fois que les fonctioins auront
+été vérifié*/
 
 #include "DataFile.h"
 #include "Dense"
@@ -13,6 +11,7 @@ le reste devrait être bon*/
 class Solution
 {
 public:
+  //Variable
   Eigen::VectorXd T;
   Eigen::VectorXd rho;
   Eigen::VectorXd rhostar;
