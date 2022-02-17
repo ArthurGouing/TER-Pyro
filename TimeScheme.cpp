@@ -40,7 +40,7 @@ void TimeScheme::InitialCondition()
 			_sol.T(j*Nx+i) =_fin_vol->Get_fct()->InitialCondition((i+1)*dx+xmin,(j+1)*dy+ymin);
 			//écriture plus simple avec la surcharge de la fonction T(doublex, double y)
 			//faudra faire un set et surchager le =
-			
+
 		}
 	}
 	// cout << "-------------------------------" << endl;
@@ -97,6 +97,7 @@ void ImplicitEulerScheme::Advance()
 
 	b=_sol.Get_T()+BC_RHS;
 	_sol.Get_T()=_solver_direct.solve(b);
+	//_sol.Set_T(_solver_direct.solve(b));
 
 
 	//Calcul de rhon+1
