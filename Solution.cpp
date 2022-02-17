@@ -9,6 +9,10 @@ Solution::Solution()
   _rhostar.resize(df->Get_Nx()) * df->Get_Ny())
 }
 
+Solution :: doouble T(double n)
+{
+  return _T(n); 
+}
 
 
 
