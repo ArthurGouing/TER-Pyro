@@ -12,23 +12,6 @@ DataFile::DataFile(std::string file_name)
   // Lecture du fichier de données
   auto config = toml::parse(file_name);
 
-  // Other
-  const auto& other = toml::find(config, "other");
-  _results = toml::find<std::string>(other, "results");
-  _lambdapv = toml::find<double>(other, "lambdapv");
-  _ppv = toml::find<double>(other, "ppv");
-  _cpv = toml::find<double>(other, "cpv");
-  _sigma = _lambdapv/(_ppv*_cpv);
-  system(("rm -r ./" + _results).c_str());
-  system(("mkdir -p ./" + _results).c_str());
-
-  // Time
-  const auto& time = toml::find(config, "time");
-  _t0 = toml::find<double>(time, "t0");
-  _tfinal = toml::find<double>(time, "tfinal");
-  _dt = toml::find<double>(time, "dt");
-  _scheme = toml::find<std::string>(time, "scheme");
-
   // Space
   const auto& space = toml::find(config, "space");
   _xmin = toml::find<double>(space, "xmin");
@@ -38,6 +21,29 @@ DataFile::DataFile(std::string file_name)
   _ymax = toml::find<double>(space, "ymax");
   _dy = toml::find<double>(space, "dy");
 
+  // Time
+  const auto& time = toml::find(config, "time");
+  _t0 = toml::find<double>(time, "t0");
+  _tfinal = toml::find<double>(time, "tfinal");
+  _dt = toml::find<double>(time, "dt");
+  _scheme = toml::find<std::string>(time, "scheme");
+
+  // Other
+  const auto& other = toml::find(config, "other");
+  _results = toml::find<std::string>(other, "results");
+  _lambdapv = toml::find<double>(other, "lambdapv");
+  _rhov = toml::find<double>(other, "rhov");
+  _rhop = toml::find<double>(other, "rhop");
+  _cpv = toml::find<double>(other, "cpv");
+  _T0 = toml::find<double>(other, "T0");
+  _Aref = toml::find<double>(other, "Aref");
+  _Ta =  toml::find<double>(other, "Ta");
+  _Lm = toml::find<double>(other, "Lm");
+  _CastestnonUnif = toml::find<std::string>(other, "CastestnonUnif");
+
+  system(("rm -r ./" + _results).c_str());
+  system(("mkdir -p ./" + _results).c_str());
+
   // Boundary conditions
   // const auto& BC = toml::find(config, "BC");
   // _LBC = toml::find<std::string>(BC, "LeftBoundCond");
@@ -45,11 +51,16 @@ DataFile::DataFile(std::string file_name)
   // _DBC = toml::find<std::string>(BC, "DownBoundCond");
   // _UBC = toml::find<std::string>(BC, "UpBoundCond");
 
+  // Scenarii
+  const auto& scenarii = toml::find(config, "scenarii");
+  _which_scenario = toml::find<std::string>(scenarii, "which_scenario");
+
   std::cout << "--------------------------------------------------" << std::endl;
   std::cout << "-------------- Adapt dt, dx and dy ---------------" << std::endl;
-  std::cout << "-------------- xmax = xmin + Nx*dx -----------" << std::endl;
-  std::cout << "-------------- ymax = ymin + Ny*dy -----------" << std::endl;
+  std::cout << "-------------- xmax = xmin + Nx*dx ---------------" << std::endl;
+  std::cout << "-------------- ymax = ymin + Ny*dy ---------------" << std::endl;
   std::cout << "-------------- tfinal = t0 + nb_it*dt ------------" << std::endl;
+  std::cout << "--------------------------------------------------" << std::endl;
   // Calcul de _Nx et adaptation de _dx pour que (xmax - xmin) = (Nx+1)*dx
   _Nx = int(ceil((_xmax-_xmin)/_dx));
   _dx = (_xmax-_xmin)/(_Nx);
@@ -71,7 +82,15 @@ DataFile::DataFile(std::string file_name)
   // Adapter le pas de temps pour avoir _tfinal = _t0 + nb_iterations*_dt
   _nb_iterations = int(ceil((_tfinal-_t0)/_dt)); // Définition du nombre d’itérations(arrondi au plus grand)
   _dt = (_tfinal-_t0) / _nb_iterations;
-  std::cout << "nb_iterations=" << _nb_iterations << " " << "_dt = " << _dt << " _dx = " << _dx << " _dy = " << _dy << " _Nx = " << _Nx << " _Ny = " << _Ny <<  std::endl;
+  std::cout << "                                                  " << std::endl;
+  std::cout << "--------------------------------------------------" << std::endl;
+  std::cout << "-------------- Constantes temporelles ------------" << std::endl;
+  std::cout << "---------- _nb_iterations=" << _nb_iterations << "   " << "_dt = " << _dt << " ----------" << std::endl;
+  std::cout << "--------------------------------------------------" << std::endl;
+  std::cout << "                                                  " << std::endl;
+  std::cout << "--------------------------------------------------" << std::endl;
+  std::cout << "-------------- Constantes spatiales --------------" << std::endl;
+  std::cout << "-- dx = " << _dx << "  " << "dy = " << _dy <<  "  " << "Nx = " << _Nx << "  " << "Ny = " << _Ny << " ---" << std::endl;
   std::cout << "--------------------------------------------------" << std::endl;
 }
 

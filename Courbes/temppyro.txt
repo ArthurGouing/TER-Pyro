@@ -1,0 +1,12 @@
+set title "Evolution de la température en fonction du temps à différentes distances de la paroi avec pyrolyse" 
+set title textcolor rgb "red"
+set xlabel "t (en s)"
+set ylabel "T (en K)"
+set grid back xtics mxtics nomytics ytics
+
+plot "pyro/Temperatures_0mm.dat" title "Temperatures à la paroi" w l, "pyro/Temperatures_1mm.dat" title "Temperatures à 1 mm" w l, "pyro/Temperatures_2mm.dat" title "Temperatures à 2 mm" w l, "pyro/Temperatures_3mm.dat" title "Temperatures à 3 mm" w l, "pyro/Temperatures_4mm.dat" title "Temperatures à 4 mm" w l
+
+set terminal png size 1024,768
+set output "Courbes/Courbespyro/Evolution de la température en fonction du temps à différentes distances de la paroi avec pyrolyse.png"
+replot
+set term wxt

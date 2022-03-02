@@ -44,26 +44,98 @@ void TimeScheme::InitialCondition()
 	// cout << "_sol0 (build with triplets) = " << endl;
 	// cout << _sol << endl;
 	// cout << "-------------------------------" << endl;
-}
 
+	_rho.resize(Nx*Ny);
 
-/*void TimeScheme::ExactSolution(double t)
-{
-	int Nx=_df->Get_Nx();
-	int Ny= _df->Get_Ny();
-	double dx = _df->Get_dx();
-	double dy = _df->Get_dy();
-	_sol.resize(Nx*Ny);
-
-	for (int j=0; j<Ny-1; ++j)
+	//Ajout d'un vecteur masse volumique
+	for (int j=0; j<Ny; ++j)
 	{
-		for (int i=0; i<Nx-1; ++i)
+		for (int i=0; i<Nx; ++i)
 		{
-			_solexact(i)=_fin_vol->Get_fct()->ExactSolution((i+1)*dx,(j+1)*dx,t);
+			_rho(j*Nx+i)=_fin_vol->Get_fct()->InitialConditionrho((i+1)*dx+xmin,(j+1)*dy+ymin);
 		}
 	}
 }
-*/
+
+void TimeScheme::rho(double T)
+{
+	double rho, C,rhov,rhop,A,Ta;
+	rhov=_df->Get_rhov();
+	A=_df->Get_Aref();
+	Ta=_df->Get_Ta();
+	C=(rhov*A)*exp(-Ta/T)/(rhov-rhop);
+	rhop=_df->Get_rhop(); //////t=0; rho=rhop CI
+	rho=rhop*exp(-C*t)+rhop;
+
+}
+
+
+ImplicitEulerScheme::ImplicitEulerScheme(DataFile* data_file, FiniteVolume* fin_vol) :
+TimeScheme(data_file,fin_vol)
+{
+	std::cout << "                                                  " << std::endl;
+	std::cout << "--------------------------------------------------" << std::endl;
+	std::cout << "-------- Build time implicit scheme class --------" << std::endl;
+  std::cout << "--------------------------------------------------" << std::endl;
+}
+
+
+
+void ImplicitEulerScheme::Advance()
+{
+	double dt=_df->Get_dt();
+	_t=_t+dt;
+
+
+	//Calcul de _rhostar
+	Eigen::VectorXd Arr;
+	Arr=_fin_vol->Get_fct()->Arrhenius(_rho,_sol);
+	_rhostar=_rho+dt*Arr;
+
+
+	//Calcul de Tn+1
+	_fin_vol->Build_flux_mat(_rho,_rhostar); //Build_flux_mat_and_BC_RHS(_t);
+	_fin_vol->Build_BC_RHS(_t,_rho,_rhostar);
+	Eigen::VectorXd BC_RHS=_fin_vol->Get_BC_RHS();
+	SparseMatrix<double> A=_fin_vol->Get_mat_flux();
+	Eigen::VectorXd b;
+	_solver_direct.analyzePattern(A);
+	_solver_direct.factorize(A);
+
+	b=_sol+BC_RHS;
+	_sol=_solver_direct.solve(b);
+
+
+	//Calcul de rhon+1
+	double Aref=_df->Get_Aref(), Ta=_df->Get_Ta(), rhov=_df->Get_rhov(), rhop=_df->Get_rhop();
+	Arr=_fin_vol->Get_fct()->Arrhenius(_rhostar,_sol);
+	double B = rhov*Aref*dt/(rhov-rhop);
+	for (int i=0; i<_rho.size() ;i++)
+	{
+		_rho(i)=(_rho(i)+B*rhop*exp(-Ta/_sol(i)))/(1.+B*exp(-Ta/_sol(i)));
+	}
+
+
+	// cout << "-------------------------------" << endl;
+	// cout << "_sol = " << endl;
+	//cout << A << endl;
+	//cout << "voilà b" << _t << endl;
+	//cout << b << endl;
+	// cout << "-------------------------------" << endl;
+}
+
+
+const Eigen::VectorXd & TimeScheme::GetSolution() const
+{
+  return _sol;
+}
+
+
+const Eigen::VectorXd & TimeScheme::GetSolutionrho() const
+{
+  return _rho;
+}
+
 
 void TimeScheme::SaveSol(Eigen::VectorXd sol, string n_sol, int n)
 {
@@ -95,68 +167,51 @@ void TimeScheme::SaveSol(Eigen::VectorXd sol, string n_sol, int n)
 	solution.close();
 }
 
-
-const Eigen::VectorXd & TimeScheme::GetSolution() const
+void TimeScheme::Save_rho(Eigen::VectorXd rho , double t , std::string name_file)
 {
-  return _sol;
+	string n_file = name_file + to_string(t) + ".txt";
+	int Nx(_df->Get_Nx()), Ny(_df->Get_Ny());
+	double xmin(_df->Get_xmin()), ymin(_df->Get_ymin());
+	double dx(_df->Get_dx()), dy(_df->Get_dy());
+	ofstream solution_rho;
+	solution_rho.open(name_file, ios::out);
+	for (int i=0 ; i<Ny ;i++)
+	{
+		solution_rho << i*dy << rho(i*Nx) <<endl;
+	}
+	solution_rho.close();
+}
+
+//------1 metre de distance<<<<<<<<<----------------------------------------------------------------------
+
+
+upwind:: upwind(DataFile* data_file,FiniteVolume* fin_vol) :TimeScheme(data_file,fin_vol)
+{
+	std::cout << "                                                  " << std::endl;
+	std::cout << "--------------------------------------------------" << std::endl;
+	std::cout << "-------- Build upwind scheme class --------" << std::endl;
+  std::cout << "--------------------------------------------------" << std::endl;
+}
+
+void upwind::Advance()
+{
+VectorXd c; //vitesse d'advection
+c=Mesh_Adapt->Get_vitesse();
+double dt=_df->Get_dt();
+double dy = _df->Get_dy();
+// sol1=sol*(t+dt);
+for(int j=1;j<=_sol.size();j++){
+  if(c<0){
+    _sol(j)=_sol(j)-(dt/dy)*c(j)*(_sol(j)-_sol(j-1));
+  }
+  else{
+    _sol(j)=_sol(j)-(dt/dy)*c(j)*(_sol(j+1)-_sol(j));
+  }
+_t=_t+dt;
+}
 }
 
 
-EulerScheme::EulerScheme(DataFile* data_file, FiniteVolume* fin_vol) :
-TimeScheme(data_file,fin_vol)
-{
-}
-
-
-void EulerScheme::Advance()
-{
-
-	double sigma=_df->Get_sigma(), dt=_df->Get_dt();
-	Eigen::SparseMatrix<double> H=_fin_vol->Get_mat_flux();
-	Eigen::VectorXd RHS=_fin_vol->Get_BC_RHS();
-
-	_sol=_sol+dt*(-sigma*H*_sol+RHS);
-}
-
-
-ImplicitEulerScheme::ImplicitEulerScheme(DataFile* data_file, FiniteVolume* fin_vol) :
-TimeScheme(data_file,fin_vol)
-{
-	std::cout << "Build time implicit scheme class." << std::endl;
-  std::cout << "-------------------------------------------------" << std::endl;
-  SparseMatrix<double> H=_fin_vol->Get_mat_flux();
-  double dt=_df->Get_dt(), sigma=_df->Get_sigma();
-  SparseMatrix<double> Id;
-  Id.resize(H.rows(),H.rows());
-  Id.setIdentity();
-
-  _IdplusdtsigmaH=Id+dt*sigma*H;
-  _solver_direct.analyzePattern(_IdplusdtsigmaH);
-  _solver_direct.factorize(_IdplusdtsigmaH);
-
-	// cout << "-------------------------------" << endl;
-	// cout << "_IdplusdtsigmaH (build with triplets) = " << endl;
-	// cout << _IdplusdtsigmaH << endl;
-	// cout << "-------------------------------" << endl;
-}
-
-
-void ImplicitEulerScheme::Advance()
-{
-	double dt=_df->Get_dt();
-	_t=_t+dt;
-	_fin_vol->Build_BC_RHS(_t);
-	Eigen::VectorXd BC_RHS=_fin_vol->Get_BC_RHS();
-	Eigen::VectorXd b;
-	b=_sol+dt*BC_RHS;
-
-	_sol=_solver_direct.solve(b);
-
-	// cout << "-------------------------------" << endl;
-	// cout << "_sol = " << endl;
-	// cout << _sol << endl;
-	// cout << "-------------------------------" << endl;
-}
 
 #define _TIME_SCHEME_CPP
 #endif

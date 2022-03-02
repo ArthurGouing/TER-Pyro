@@ -10,7 +10,7 @@ protected:
   // Pointeur vers le laplacien
   FiniteVolume* _fin_vol;
   //Vecteur initial et vecteur solution
-  Eigen::VectorXd _sol;
+  Eigen::VectorXd _sol, _rho, _rhostar;
   // Time
   double _t;
 
@@ -21,30 +21,33 @@ public:
   // alors le compilateur en génère un implicitement.
   virtual ~TimeScheme();
   void InitialCondition();
+  void rho(double T);
   // Enregistre la solution un fichier
   void SaveSol(Eigen::VectorXd sol, std::string n_sol, int n);
-  // Enregistre la solution un fichier
-  // void Save_sol(Eigen::VectorXd s, int n, std::string st) {_fin_vol->Save_sol(s, n, st);};??
+  void Save_rho(Eigen::VectorXd rho , double t , std::string name_file);
   // Une étape du schéma en temps
   virtual void Advance() = 0;
   // Permet de récupérer _sol
   const Eigen::VectorXd & GetSolution() const;
+  const Eigen::VectorXd & GetSolutionrho() const;
 };
 
-class EulerScheme : public TimeScheme
-{
-public:
-  EulerScheme(DataFile* data_file, FiniteVolume* fin_vol);
-  void Advance();
-};
 
 class ImplicitEulerScheme : public TimeScheme
 {
 private:
-	Eigen::SparseMatrix<double> _IdplusdtsigmaH;
   Eigen::SparseLU<Eigen::SparseMatrix<double> > _solver_direct;
 public:
   ImplicitEulerScheme(DataFile* data_file, FiniteVolume* fin_vol);
+  void Advance();
+};
+
+
+
+class upwind : public TimeScheme
+{
+public:
+  upwind(DataFile* data_file,FiniteVolume* fin_vol);
   void Advance();
 };
 

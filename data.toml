@@ -9,12 +9,22 @@ dy = 0.00004
 [time]
 t0 = 0.0
 tfinal = 100.0
-dt = 0.1
-# ExplicitEuler = Explicit Euler, ImplicitEuler = Implicit Euler
+dt = 1.0
 scheme = "ImplicitEuler"
 
 [other]
+results = "Results/noPyro/"
 lambdapv =1.0
-ppv = 1500.0
-cpv= 1000.0
-results = "results"
+rhov = 1500.0
+rhop = 1000.0
+cpv = 1000.0
+T0 = 293.0
+# Si on veut désactiver la pyrolyse => Aref=0.0 normalement
+Aref= 0.0 #1000.0
+Ta=6000.0
+Lm=3000000.0
+
+# Test scenarii
+# Choice between: "noadapt", "adapt"
+[scenarii]
+which_scenario = "adapt"

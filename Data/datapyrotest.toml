@@ -1,0 +1,31 @@
+[space]
+xmin = 0.0
+xmax = 0.05
+dx = 0.05
+ymin = 0.0
+ymax = 0.01
+dy = 0.00002
+
+[time]
+t0 = 0.0
+tfinal = 100.0
+dt = 1.0
+scheme = "ImplicitEuler"
+
+[other]
+results = "pyro/"
+lambdapv =1.0
+rhov = 1500.0
+rhop = 1000.0
+cpv = 1000.0
+T0 = 293.0
+# Si on veut désactiver la pyrolyse => Aref=0.0 normalement
+Aref= 1000.0
+Ta=6000.0
+Lm=3000000.0
+CastestnonUnif=""
+
+# Test scenarii
+# Choice between: "noadapt", "adapt"
+[scenarii]
+which_scenario = "noadapt"

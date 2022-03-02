@@ -2,9 +2,9 @@
 CC=g++
 
 # Options en mode optimisé - La variable DEBUG est définie comme fausse
-OPTIM_FLAG = -O3 -DNDEBUG -I Eigen/Eigen -std=c++11
+OPTIM_FLAG = -O3 -DNDEBUG -I /Users/dinazyani/Downloads/MATMECAS5/2a/c++/EigenLibrary/Eigen -std=c++11
 # Options en mode debug - La variable est DEBUG est définie comme vraie
-DEBUG_FLAG = -g -DDEBUG -w -I Eigen/Eigen -std=c++11
+DEBUG_FLAG = -g -DDEBUG -w -I /Users/dinazyani/Downloads/MATMECAS5/2a/c++/EigenLibrary/Eigen -std=c++11
 
 # On choisit comment on compile
 CXX_FLAGS = $(DEBUG_FLAG)
@@ -13,7 +13,7 @@ CXX_FLAGS = $(DEBUG_FLAG)
 PROG = run
 
 # Les fichiers source à compiler
-SRC = main.cc TimeScheme.cpp FiniteVolume.cpp DataFile.cpp Function.cpp
+SRC = main.cc MeshAdapt.cpp TimeScheme.cpp FiniteVolume.cpp DataFile.cpp Function.cpp
 
 # La commande complète : compile seulement si un fichier a été modifié
 $(PROG) : $(SRC)

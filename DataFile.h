@@ -8,10 +8,11 @@
 class DataFile {
 private:
   // Tous les paramètres contenus dans le fichier de données
-  double _sigma;
   double _lambdapv;
-  double _ppv;
+  double _rhov, _rhop;
   double _cpv;
+  double _T0;
+  double _Aref, _Ta, _Lm;
   double _xmin;
   double _xmax;
   double _dx;
@@ -25,8 +26,9 @@ private:
   double _dt;
   int _nb_iterations;
   std::string _scheme;
+  std::string _which_scenario;
   std::string _results;
-  std::string _LBC, _RBC, _DBC, _UBC;
+  std::string _LBC, _RBC, _DBC, _UBC , _CastestnonUnif;
   // Nom du fichier de données
   const std::string _file_name;
   // Pour savoir si l'utilisateur a donné la valeur du paramètres
@@ -57,12 +59,17 @@ public:
   const double & Get_ymax() const {return _ymax;};
   const double & Get_dy() const {return _dy;};
   const int & Get_Ny() const {return _Ny;};
-  const double & Get_ppv() const {return _ppv;};
+  const double & Get_lambdapv() const {return _lambdapv;};
   const double & Get_cpv() const {return _cpv;};
-  const double & Get_sigma() const {return _sigma;};
+  const double & Get_Aref() const {return _Aref;};
+  const double & Get_Ta() const {return _Ta;};
+  const double & Get_rhov() const {return _rhov;};
+  const double & Get_rhop() const {return _rhop;};
+  const double & Get_Lm() const {return _Lm;};
   const double & Get_t0() const {return _t0;};
   const double & Get_tfinal() const {return _tfinal;};
   const double & Get_dt() const {return _dt;};
+  const double & Get_T0() const {return _T0;};
   const int & Get__nb_iterations() const {return _nb_iterations;};
   const std::string & Get_scheme() const {return _scheme;};
   const std::string & Get_results() const {return _results;};
@@ -70,6 +77,8 @@ public:
   const std::string & Get_RBC() const {return _RBC;};
   const std::string & Get_DBC() const {return _DBC;};
   const std::string & Get_UBC() const {return _UBC;};
+  const std::string & Get_CastestnonUnif() const {return _CastestnonUnif;};
+  const std::string Get_scenario() const {return _which_scenario;};
 };
 
 #define _DATA_FILE_H
