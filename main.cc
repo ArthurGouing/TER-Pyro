@@ -82,6 +82,7 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   time_scheme->SaveSol(time_scheme->Get_Solution(),"ImpliciteScheme", 0); //peut être que ca va déconner avec le fait de pas utiliser une varibale
   temp=time_scheme->Get_Solution().Get_T();
   rho=time_scheme->Get_Solution().Get_rho();
+  Solution_tn=time_scheme->Get_Solution();
   for (int i = 0; i <= 4 ; i++)
   {
     templist[i] << 0. << " " << temp(Nylist[i]) << endl;
@@ -97,7 +98,7 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   cout << "                                                  " << ::endl;
   cout << "--------------------------------------------------" << endl;
   cout << "------------      Time Loop         --------------" << endl;
-  for (int n = 1; n <= nb_iterations; n++) // Boucle en temps
+  for (int n = 1; n <=5 /*nb_iterations*/; n++) // Boucle en temps
   {
     tn=n*dt;
     cout << "Iteration : " << n << " Temps : " << tn << " s" << endl;
@@ -105,7 +106,7 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
     time_scheme->SaveSol(time_scheme->Get_Solution(),"ImpliciteScheme", n);
     temp = time_scheme->Get_Solution().Get_T();
     rho  = time_scheme->Get_Solution().Get_rho();
-    //Solution_tn = time_scheme->Get_Solution();
+    Solution_tn = time_scheme->Get_Solution();
     //Savoir comment faire ????
     if (maillage=="adapt")
     {

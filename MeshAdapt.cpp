@@ -27,6 +27,23 @@ _df(data_file)
 
 void Mesh_Adapt::Update(Solution & sol)//Soluiton sol en entré
 {
+
+  ofstream mon_flux1;
+  string name_file1("rho.txt");
+  mon_flux1.open(name_file1, ios::out);
+
+  for (int i=0; i<_Y.size()-1; i++) //Verifier les tailles de Dy
+  {
+    cout << "1er fichier"<<endl;
+    cout <<i <<endl;
+    cout << _Y.size()<< endl;
+    mon_flux1 << _Y(i) <<" "<< sol.rho_cell(i,25) << endl;
+  }
+  cout << sol.Get_rhoy(25) << endl;
+
+  mon_flux1.close();
+
+
   //calcul u
 
   int Nx = _df->Get_Nx();
@@ -36,8 +53,30 @@ void Mesh_Adapt::Update(Solution & sol)//Soluiton sol en entré
   VectorXd metric(Ny+1);
   VectorXd K(Ny);
   _rho= sol.Get_rho(); // inutile ?
+  double maxU2 =0;
+  double metmax=10.0;
 
   U2=Derive_y_2(_rho); // dérivée seconde selon y en x = dx, aux noeuds du maillaage
+  for (int i=0; i<U2.size(); i++)
+  {
+    if (abs(U2(i)>maxU2))
+    {
+      maxU2=abs(U2(i));
+    }
+  }
+  U2=(U2/maxU2)*metmax;
+
+  ofstream mon_flux2;
+  string name_file2("derive2.txt");
+  mon_flux2.open(name_file2, ios::out);
+
+  for (int i=0; i<_Dy.size(); i++) //Verifier les tailles de Dy
+  {
+    mon_flux2 << _Y(i) <<" "<< U2(i) << endl;
+  }
+  cout << sol.Get_rhoy(25) << endl;
+
+  mon_flux1.close();
 
   //calcul des coefficient de raideur ki
   for (int i=0 ; i<metric.size(); i++)  //Calcul de la métrique
@@ -59,7 +98,7 @@ void Mesh_Adapt::Update(Solution & sol)//Soluiton sol en entré
   VectorXd b(Ny-1), Ysolv(Ny-1);
   vector<Triplet<double>> triplets;
   SparseLU<SparseMatrix<double>, COLAMDOrdering<int> > solver;
-  double coeff = 1;
+  double coeff = 1e10;
   b.setZero();
   b(b.size()-1)=coeff*K(K.size()-1)*Ly;
 
@@ -127,6 +166,22 @@ void Mesh_Adapt::Update(Solution & sol)//Soluiton sol en entré
   // save_vector(Fexact, _Y, "fonctionE.dat");
   // save_vector(F2, _Y, "fonction2.dat");
   //
+
+
+  ofstream mon_flux;
+  string name_file("maillage.txt");
+  mon_flux.open(name_file, ios::out);
+
+  for (int i=0; i<_Y.size(); i++)
+  {
+    cout << i <<endl;
+    cout<< _Y.size()<<endl;
+    mon_flux << _Y(i) <<" "<< 0 << endl;
+  }
+
+  mon_flux.close();
+
+
 }
 
 

@@ -7,7 +7,7 @@ _df(data_file)
 {
   T.resize(_df->Get_Nx() * _df->Get_Ny());
   rho.resize(_df->Get_Nx() * _df->Get_Ny());
-  if (abs(_df->Get_Aerf())>1e-16)
+  if (abs(_df->Get_Aref())>1e-16)
   rhostar.resize(_df->Get_Nx() * _df->Get_Ny());
 }
 
@@ -18,7 +18,7 @@ double Solution::T_cell(int i, int j) //i la ligne et j la colonne
 }
 
 
-double Solution::T_cell(double x, double y)
+double Solution::T_coord(double x, double y)
 {
   double dx=_df->Get_dx();
   double dy=_df->Get_dy();
@@ -33,7 +33,7 @@ double Solution::rho_cell(int i, int j) //i la ligne et j la colonne
   return rho[i*Nx+j];
 }
 
-double Solution::rho_cell(double x, double y)
+double Solution::rho_coord(double x, double y)
 {
   double dx=_df->Get_dx();
   double dy=_df->Get_dy();
@@ -49,7 +49,7 @@ double Solution::rhostar_cell(int i, int j) //i la ligne et j la colonne
   return rhostar[i*Nx+j];
 }
 
-double Solution::rhostar_cell(double x, double y)
+double Solution::rhostar_coord(double x, double y)
 {
   double dx=_df->Get_dx();
   double dy=_df->Get_dy();
@@ -71,7 +71,7 @@ Eigen::VectorXd Solution::Get_Ty(int j)//Le vecteur de la colonne j
 Eigen::VectorXd Solution::Get_Tx(int i)// Le vecteur de la ligne i
 {
   Eigen::VectorXd V;
-  V.resize(_df->Get_Ny());
+  V.resize(_df->Get_Nx());
   for (int j=0; j<V.size(); j++)
   V(j)=T_cell(i,j);
   return V;
@@ -91,7 +91,7 @@ Eigen::VectorXd Solution::Get_rhoy(int j)//Le vecteur de la colonne j
 Eigen::VectorXd Solution::Get_rhox(int i)// Le vecteur de la ligne i
 {
   Eigen::VectorXd V;
-  V.resize(_df->Get_Ny());
+  V.resize(_df->Get_Nx());
   for (int j=0; j<V.size(); j++)
   V(j)=rho_cell(i,j);
   return V;
@@ -111,7 +111,7 @@ Eigen::VectorXd Solution::Get_rhostary(int j)//Le vecteur de la colonne j
 Eigen::VectorXd Solution::Get_rhostarx(int i)// Le vecteur de la ligne i
 {
   Eigen::VectorXd V;
-  V.resize(_df->Get_Ny());
+  V.resize(_df->Get_Nx());
   for (int j=0; j<V.size(); j++)
   V(j)=rhostar_cell(i,j);
   return V;

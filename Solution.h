@@ -23,7 +23,7 @@ public:
   Solution(DataFile* data_file);
   //Valeur aux mailles des grandeurs (surcharge de fonction)
   double T_cell(int i, int j);
-  double T_cell(double x, double y);
+  double T_coord(double x, double y);
 
   //sous forme de vecteur
   Eigen::VectorXd Get_T(){return T;};  //le vecteur de taille Nx*Ny
@@ -33,7 +33,7 @@ public:
 
   //idem avec rho
   double rho_cell(int i, int j);
-  double rho_cell(double x, double y);
+  double rho_coord(double x, double y);
 
   Eigen::VectorXd Get_rho(){return rho;};
   Eigen::VectorXd Get_rhoy(int i); //le vecteur de taille Ny ...
@@ -43,7 +43,7 @@ public:
 
   //et rho* ?
   double rhostar_cell(int i, int j);
-  double rhostar_cell(double x, double y);
+  double rhostar_coord(double x, double y);
 
   Eigen::VectorXd Get_rhostar(){return rhostar;};
   Eigen::VectorXd Get_rhostary(int i); //le vecteur de taille Ny ...
