@@ -48,8 +48,10 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   //Ouverture des fichiers solutions à plusieurs distances de la paroie
   vector<ofstream> templist;
   vector<ofstream> rholist;
+  vector<ofstream> tempylist;
   templist.resize(5);
   rholist.resize(5);
+  tempylist.resize(11);
   for (int i = 0; i <= 4 ; i++)
   {
     string n_filetemp = data_file->Get_results() + "Temperatures_" + to_string(i)+ "mm.dat";
@@ -60,6 +62,10 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
       rholist[i].open(n_filerho, ios::out);
     }
   }
+
+  //Température suivant y à t0
+  string n_filetemp = data_file->Get_results() + "Temperatures_suivant_y_a_" + to_string(data_file->Get_t0())+ "_secondes.dat";
+  tempylist[0].open(n_filetemp, ios::out);
 
 
   //Obtention du numéro de la ligne corespondant à la distance
@@ -89,6 +95,18 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
       rholist[i]  << 0. << " " << rho(Nylist[i])  << endl;
     }
   }
+
+
+  //Température suivant y à t0
+  double dist = (mesh_adapt->Get_Dy())(0)/2;
+  tempylist[0] << dist << " " << temp(0) << endl;
+  int Ny = data_file->Get_Ny();
+  int Nx = data_file->Get_Nx();
+  for (int i=1; i<Ny; i++)
+  {
+    dist += ((mesh_adapt->Get_Dy())(i-1)+(mesh_adapt->Get_Dy())(i))/2;
+    tempylist[0] << dist << " " << temp(i*Nx) << endl;
+  }
   cout << "-------------------------------------------------" << endl;
 
 
@@ -96,6 +114,9 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   cout << "                                                  " << ::endl;
   cout << "--------------------------------------------------" << endl;
   cout << "------------      Time Loop         --------------" << endl;
+  double dtgraph = (data_file->Get_tfinal()/10);
+  double cond(dtgraph);
+  int compteur(0);
   for (int n = 1; n <= nb_iterations; n++) // Boucle en temps
   {
     tn=n*dt;
@@ -115,6 +136,23 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
       if (data_file->Get_Aref()!=0.)
       {
         rholist[i]  << tn << " " << rho(Nylist[i])  << endl;
+      }
+    }
+
+
+    //Temperature suivant y
+    if (abs(tn-cond) <= dt/2)
+    {
+      cond+=dtgraph;
+      compteur+=1;
+      dist = (mesh_adapt->Get_Dy())(0)/2;
+      n_filetemp = data_file->Get_results() + "Temperatures_suivant_y_a_" + to_string(tn)+ "_secondes.dat";
+      tempylist[compteur].open(n_filetemp, ios::out);
+      tempylist[compteur] << dist << " " << temp(0) << endl;
+      for (int j=1; j<Ny; j++)
+      {
+        dist += ((mesh_adapt->Get_Dy())(j-1)+(mesh_adapt->Get_Dy())(j))/2;
+        tempylist[compteur] << dist << " " << temp(j*Nx) << endl;
       }
     }
   }

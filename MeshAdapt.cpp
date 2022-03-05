@@ -319,7 +319,7 @@ void Mesh_Adapt::save_vector(Eigen::VectorXd U, Eigen::VectorXd Y, std::string a
   flux.close();
 }
 
-int Mesh_Adapt::cellule(double distance) //A changer surement avec l'adaptation de maillage !!!!!!!!!!!!!!!!!!
+int Mesh_Adapt::cellule(double distance)
 {
   int Nx=_df->Get_Nx(), Ny=_df->Get_Ny();
   double dy = _df->Get_dy();
