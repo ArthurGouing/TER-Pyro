@@ -17,7 +17,7 @@ _df(data_file)
   _Dy.resize(_df->Get_Ny()); //taille de Dy=nombre de cases verticales
   _Y.resize(_df->Get_Ny()+1);
   _Y(0)=0.;
-  if (_df->Get_CastestnonUnif() == "oui")
+  if (_df->Get_CastestnonUnif() == "oui") //ajout du cas maillage non uniforme  attention au datafile!!!!!!!
   {
     Maillage_non_uniforme();
   }
@@ -68,26 +68,8 @@ _df(data_file)
 
 }
 
-// void Mesh_Adapt::Maillage_non_uniforme()
-// {
-//   double length(0) , pas(_df->Get_dy()*(1./_df->Get_Ny()));
-//
-//   for (int i = 1 ; i<=_df->Get_Ny()/2; i++)
-//   {
-//     _Dy(_df->Get_Ny()/2-i)=_df->Get_dy()-i*pas;
-//     length+=_Dy(i);
-//   }
-//   for (int i = 1 ; i<=_df->Get_Ny()/2; i++)
-//   {
-//       _Dy(_df->Get_Ny()/2-1+i)=_df->Get_dy()+i*pas;
-//     length+=_Dy(i);
-//   }
-//   cout <<"la longueur totale suivant y est " << length << endl;
-//
-// }
 
-
-void Mesh_Adapt::Maillage_non_uniforme()
+void Mesh_Adapt::Maillage_non_uniforme() // Calcul du maillage non uniforme !!!!!!!
 {
   double a , Ny=_df->Get_Ny() , dy=_df->Get_dy() , taille=Ny*dy , length(0);
   a=(taille-dy/2.*Ny)/(Ny*Ny-Ny*(Ny+1)/2.);
@@ -99,8 +81,25 @@ void Mesh_Adapt::Maillage_non_uniforme()
   }
   cout <<"la longueur totale suivant y est " << length << endl;
 
-
 }
+
+void Mesh_Adapt::Maillage_Dystar()
+{
+  _Dystar = (_Dy+_Dyold)/2. ;
+}
+
+  double Mesh_Adapt::NormLinf()
+  {
+    double norm(0.);
+    for (int i=0; i < _Dy.size(); i++)
+    {
+      if (abs(_Dy(i)-_Dyold(i))>norm)
+      {
+        norm=abs(_Dy(i)-_Dyold(i));
+      }
+    }
+    return norm;
+  }
 
 void Mesh_Adapt::Update(VectorXd T)
 {

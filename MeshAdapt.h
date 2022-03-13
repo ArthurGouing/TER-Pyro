@@ -10,7 +10,7 @@ class Mesh_Adapt
  {
  private:
    Eigen::VectorXd _T, _U;
-  Eigen::VectorXd _Dy;
+  Eigen::VectorXd _Dy,_Dystar,_Dyold;
   Eigen::VectorXd _Y;
   DataFile* _df;
  public:
@@ -20,7 +20,10 @@ class Mesh_Adapt
   Eigen::VectorXd Derive_y_2(Eigen::VectorXd T);
   void save_vector_mesh(Eigen::VectorXd Y, std::string a);
   void save_vector(Eigen::VectorXd U, Eigen::VectorXd Y, std::string a); // pour voir U2
-  const Eigen::VectorXd Get_Dy() const {return _Dy;}; /////!!!!!!
+  const Eigen::VectorXd Get_Dy() const {return _Dy;};
+  const Eigen::VectorXd Get_Dystar() const {return _Dystar;};/////!!!!!!
+  void Maillage_Dystar();
+  double NormLinf();
   int cellule(double distance);
 };
 
