@@ -143,7 +143,7 @@ VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T) // T de taille Nx*Ny
   return derive2;
 }
 
-//----------------------------Nuémero de la case--------------------------------
+//----------------------------Numéro de la case--------------------------------
 
 int Mesh_Adapt::cellule(double distance) //A changer surement avec l'adaptation de maillage !!!!!!!!!!!!!!!!!!
 {
