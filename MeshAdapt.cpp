@@ -10,6 +10,7 @@
 using namespace Eigen;
 using namespace std;
 
+//----------------------------Constructeur--------------------------------------
 
 Mesh_Adapt::Mesh_Adapt(DataFile* data_file) :
 _df(data_file)
@@ -17,6 +18,7 @@ _df(data_file)
   _Dy.resize(_df->Get_Ny()); //taille de Dy=nombre de cases verticales
   _Y.resize(_df->Get_Ny()+1);
   _Y(0)=0.;
+
   for (int i=0; i<_Dy.size(); i++)
   {
     _Dy(i) =_df->Get_dy();
@@ -25,25 +27,10 @@ _df(data_file)
 
 }
 
-void Mesh_Adapt::Update(Solution & sol)//Soluiton sol en entré
+//--------------------------------Mise à jour du maillage-----------------------
+
+void Mesh_Adapt::Update(Solution & sol)//Soluiton sol en entrée
 {
-
-  ofstream mon_flux1;
-  string name_file1("rho.txt");
-  mon_flux1.open(name_file1, ios::out);
-
-  for (int i=0; i<_Y.size()-1; i++) //Verifier les tailles de Dy
-  {
-    cout << "1er fichier"<<endl;
-    cout <<i <<endl;
-    cout << _Y.size()<< endl;
-    mon_flux1 << _Y(i) <<" "<< sol.rho_cell(i,25) << endl;
-  }
-  cout << sol.Get_rhoy(25) << endl;
-
-  mon_flux1.close();
-
-
   //calcul u
 
   int Nx = _df->Get_Nx();
@@ -56,36 +43,22 @@ void Mesh_Adapt::Update(Solution & sol)//Soluiton sol en entré
   double maxU2 =0;
   double metmax=10.0;
 
-  U2=Derive_y_2(_rho); // dérivée seconde selon y en x = dx, aux noeuds du maillaage
+  U2=Derive_y_2(_rho)/5000; // dérivée seconde selon y en x = dx, aux noeuds du maillaage
   for (int i=0; i<U2.size(); i++)
   {
-    if (abs(U2(i)>maxU2))
+    if (abs(U2(i))>maxU2)
     {
       maxU2=abs(U2(i));
     }
   }
   U2=(U2/maxU2)*metmax;
 
-  ofstream mon_flux2;
-  string name_file2("derive2.txt");
-  mon_flux2.open(name_file2, ios::out);
-
-  for (int i=0; i<_Dy.size(); i++) //Verifier les tailles de Dy
-  {
-    mon_flux2 << _Y(i) <<" "<< U2(i) << endl;
-  }
-  cout << sol.Get_rhoy(25) << endl;
-
-  mon_flux1.close();
-
   //calcul des coefficient de raideur ki
   for (int i=0 ; i<metric.size(); i++)  //Calcul de la métrique
   {
-    double minimum = 0.01;
-    metric(i)= sqrt( max(U2(i),minimum));
+    double minimum =10;
+    metric(i)= sqrt(max(abs(U2(i)),minimum));
   }
-
-  save_vector(metric,_Y, "test_Metric");
 
   for (int i=0 ; i<K.size(); i++)  //Calcul de K
   {
@@ -143,47 +116,9 @@ void Mesh_Adapt::Update(Solution & sol)//Soluiton sol en entré
 
     }
   }
-  for (int i=0; i<Ny+1;i++)
-  {
-    //double nu = 2;
-    //double c = 1;
-    //U2(i)=c*exp(c*_Y(i)/(nu-1))/((nu-1)*(1-exp(c/nu)));
-    U2(i)=25*exp(-(_Y(i)-0.005)*(_Y(i)-0.005)/(2*0.0002*0.0002));
-  }
-  save_vector(U2,_Y, "test_d2T0.dat");
-  //
-  // // test de la fonction derive2 pour un maillage non uniforme
-  // cout << "debut test derive" << endl;
-  // VectorXd F(Ny+1), F2(Ny+1), Fexact(Ny+1);
-  // for (int i=0 ; i<Ny+1 ; i++)
-  // {
-  //   F(i) = pow(_Y(i),3);
-  //   Fexact(i) = 6*_Y(i);
-  // }
-  // F2 = Derive_y_2(F);
-  // cout << "save"<<endl;
-  // save_vector(F, _Y, "fonction.dat");
-  // save_vector(Fexact, _Y, "fonctionE.dat");
-  // save_vector(F2, _Y, "fonction2.dat");
-  //
-
-
-  ofstream mon_flux;
-  string name_file("maillage.txt");
-  mon_flux.open(name_file, ios::out);
-
-  for (int i=0; i<_Y.size(); i++)
-  {
-    cout << i <<endl;
-    cout<< _Y.size()<<endl;
-    mon_flux << _Y(i) <<" "<< 0 << endl;
-  }
-
-  mon_flux.close();
-
-
 }
 
+//--------------------------------------Dérivée seconde-------------------------
 
 VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T) // T de taille Nx*Ny
 {
@@ -193,15 +128,9 @@ VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T) // T de taille Nx*Ny
   VectorXd derive2 (_Dy.size()+1);
   for (int i=2;i<derive2.size()-2; i++) //Cas général
   {
-
-    // double Tim1 = (T[(i-1)*Nx]+T[(i)*Nx])/2.;          // On fait 3 calculs on pourrait en faire qu'1 et récupérer les valeurs déjà calculé
-    // double Ti = (T[(i)*Nx]+T[(i+1)*Nx])/2.;
-    // double Tip1 = (T[(i+2)*Nx]+T[(i+1)*Nx])/2.;
-
-    double Tim1 = T[(i-1)*Nx]; // On fait 3 calculs on pourrait en faire qu'1 et récupérer les valeurs déjà calculé
+    double Tim1 = T[(i-1)*Nx];
     double Ti =  T[i*Nx];
     double Tip1 =  T[(i+1)*Nx];
-
 
     derive2(i) = 2*(_Dy(i-1)*Tip1 + _Dy(i)*Tim1 - (_Dy(i-1)+_Dy(i))*Ti) / (_Dy(i)*_Dy(i)*_Dy(i-1) + _Dy(i-1)*_Dy(i-1)*_Dy(i));
   }
@@ -210,72 +139,11 @@ VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T) // T de taille Nx*Ny
   derive2(0) = derive2(2);
   derive2(1) = derive2(2);
   derive2(derive2.size()-1) = derive2(derive2.size()-3);
+  derive2(derive2.size()-2) = derive2(derive2.size()-3);
   return derive2;
 }
 
-
-// VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T)
-// {
-//   double Ny = _df->Get_Ny();
-//   double Nx = _df->Get_Nx();
-//   VectorXd derive2(Ny+1), derive1(Ny+1);
-//   VectorXd U(Ny+1);
-//
-//   //Calcul de U
-//   U(0)=T(0);
-//   for (int i=1;i<=Ny-1; i++)
-//   {
-//     U(i)=(T((i-1)*Nx)+T(i*Nx))/2.;
-//   }
-//   U(Ny)=T((Ny-1)*Nx);
-//
-//   //Calcul de U1
-//   derive1(0)=(U(1)-U(0))/(_Y(1)-_Y(0));
-//   for (int i=1;i<=Ny-1; i++)
-//   {
-//     U(i)=(T(i-1)+T(i))/2.;
-//   }
-//   derive1(Ny)=(U(Ny)-U(Ny-1))/(_Y(Ny)-_Y(Ny-1));
-//
-//   //Calcul de U2
-//   derive2(0) = (2./pow(_Y(1)-_Y(0),2))*(U(1)-U(0)-(_Y(1)-_Y(0))*derive1(0));
-//   for (int i=1;i<=Ny-2; i++) //Cas général (1 à Ny-1)
-//   {
-//     double U2g = (2./pow(_Y(i-1)-_Y(i),2))*(U(i-1)-U(i)-(_Y(i-1)-_Y(i))*derive1(i));
-//     double U2d = (2./pow(_Y(i+1)-_Y(i),2))*(U(i+1)-U(i)-(_Y(i+1)-_Y(i))*derive1(i));
-//
-//     derive2(i) = (U2d*(_Y(i+1)-_Y(i))-U2g*(_Y(i-1)-_Y(i)))/((_Y(i+1)-_Y(i))-(_Y(i-1)-_Y(i)));
-//   }
-//   derive2(Ny) = (2./pow(_Y(Ny-1)-_Y(Ny),2))*(U(Ny-1)-U(Ny)-(_Y(Ny-1)-_Y(Ny))*derive1(Ny));
-//
-//   return derive2;
-// }
-
-
-
-void Mesh_Adapt::save_vector_mesh(Eigen::VectorXd Y, std::string a) // pour le mesh
-{
-  ofstream flux;
-  flux.open(a);
-  for (int i=0; i<Y.size();i++)
-  {
-    flux << Y(i) << " " << 0 << endl;
-  }
-  flux.close();
-}
-
-void Mesh_Adapt::save_vector(Eigen::VectorXd U, Eigen::VectorXd Y, std::string a) // pour voir U2
-{
-  //cout << "Dans le fichier "+a+" le vecteur U est de taill "<<U.size()<<" et Y est de taille "<<Y.size()<<endl;
-  ofstream flux;
-  flux.open(a);
-  for (int i=0; i<Y.size();i++)
-  {
-    flux << Y(i) << " " << U(i) << endl;
-  }
-
-  flux.close();
-}
+//----------------------------Nuémero de la case--------------------------------
 
 int Mesh_Adapt::cellule(double distance) //A changer surement avec l'adaptation de maillage !!!!!!!!!!!!!!!!!!
 {

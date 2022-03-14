@@ -23,9 +23,7 @@ class Mesh_Adapt
   void Update(Solution & sol);
   Eigen::VectorXd Derive_y_2(Eigen::VectorXd rho);
   const Eigen::VectorXd Get_Dy() const {return _Dy;};
-  //Fonction de test
-  void save_vector_mesh(Eigen::VectorXd Y, std::string a);
-  void save_vector(Eigen::VectorXd U, Eigen::VectorXd Y, std::string a); // pour voir U2
+  //Fonction numéro de cellule
   int cellule (double distance);
 };
 
