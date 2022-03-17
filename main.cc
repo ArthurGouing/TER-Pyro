@@ -5,8 +5,9 @@
 
 //ceci est un testubububivivi
 jhuu
-,ikhhikj
-using namespace Eigenbib juj;
+,ikhhikjjnbbbbb
+kkkkkk
+using namespace Eigen;
 using namespace std;
 
 int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et argv[0]="./laplacian" argv[1]="dataSmallCase.toml"
