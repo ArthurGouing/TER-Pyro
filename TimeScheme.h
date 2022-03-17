@@ -10,7 +10,8 @@ protected:
   // Pointeur vers le laplacien
   FiniteVolume* _fin_vol;
   //Vecteur initial et vecteur solution
-  Eigen::VectorXd _sol, _rho, _rhostar;
+  //Eigen::VectorXd _sol, _rho, _rhostar;
+  Solution _sol;
   // Time
   double _t;
 
@@ -22,13 +23,17 @@ public:
   virtual ~TimeScheme();
   void InitialCondition();
   // Enregistre la solution un fichier
-  void SaveSol(Eigen::VectorXd sol, std::string n_sol, int n);
-  void Save_rho(Eigen::VectorXd rho , double t , std::string name_file);
+  void SaveSol(Solution sol, std::string n_sol, int n);
+  //void SaveSol(Eigen::VectorXd sol, std::string n_sol, int n); //à changer
+  void Save_rho(Eigen::VectorXd rho , double t , std::string name_file);//à changer
   // Une étape du schéma en temps
   virtual void Advance() = 0;
   // Permet de récupérer _sol
+  /*
   const Eigen::VectorXd & GetSolution() const;
-  const Eigen::VectorXd & GetSolutionrho() const;
+  const Eigen::VectorXd & GetSolutionrho() const; // Inutile à cause de la class S
+  */
+  Solution & Get_Solution(){return _sol;};
 };
 
 

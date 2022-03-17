@@ -1,4 +1,3 @@
-
 #ifndef _MESHADAPT_CPP
 
 
@@ -11,6 +10,7 @@
 using namespace Eigen;
 using namespace std;
 
+//----------------------------Constructeur--------------------------------------
 
 Mesh_Adapt::Mesh_Adapt(DataFile* data_file) :
 _df(data_file)
@@ -18,14 +18,18 @@ _df(data_file)
   _Dy.resize(_df->Get_Ny()); //taille de Dy=nombre de cases verticales
   _Y.resize(_df->Get_Ny()+1);
   _Y(0)=0.;
+
   for (int i=0; i<_Dy.size(); i++)
   {
     _Dy(i) =_df->Get_dy();
     _Y(i+1) = _Y(i)+_df->Get_dy();
   }
+
 }
 
-void Mesh_Adapt::Update(VectorXd rho)
+//--------------------------------Mise à jour du maillage-----------------------
+
+void Mesh_Adapt::Update(Solution & sol)//Soluiton sol en entrée
 {
 
   //Initialisation
@@ -35,16 +39,25 @@ void Mesh_Adapt::Update(VectorXd rho)
   VectorXd U2(Ny+1);
   VectorXd metric(Ny+1);
   VectorXd K(Ny);
-  _rho= rho;
+  _rho= sol.Get_rho(); // inutile ?
+  double maxU2 =0;
+  double metmax=10.0;
 
-  //calcul la dérivée seconde
-  U2=Derive_y_2(_rho); // dérivée seconde selon y en x = dx, aux noeuds du maillaage
+  U2=Derive_y_2(_rho)/5000; // dérivée seconde selon y en x = dx, aux noeuds du maillaage
+  for (int i=0; i<U2.size(); i++)
+  {
+    if (abs(U2(i))>maxU2)
+    {
+      maxU2=abs(U2(i));
+    }
+  }
+  U2=(U2/maxU2)*metmax;
 
   //calcul des coefficient de raideur ki
   for (int i=0 ; i<metric.size(); i++)  //Calcul de la métrique
   {
-    double minimum = 0.01;
-    metric(i)= sqrt( max(U2(i),minimum));
+    double minimum =10;
+    metric(i)= sqrt(max(abs(U2(i)),minimum));
   }
 
   for (int i=0 ; i<K.size(); i++)  //Calcul de K
@@ -58,7 +71,7 @@ void Mesh_Adapt::Update(VectorXd rho)
   VectorXd b(Ny-1), Ysolv(Ny-1);
   vector<Triplet<double>> triplets;
   SparseLU<SparseMatrix<double>, COLAMDOrdering<int> > solver;
-  double coeff = 1e12;
+  double coeff = 1e10;
   b.setZero();
   b(b.size()-1)=coeff*K(K.size()-1)*Ly;
 
@@ -105,8 +118,9 @@ void Mesh_Adapt::Update(VectorXd rho)
   }
 }
 
+//--------------------------------------Dérivée seconde-------------------------
 
-VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T)
+VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T) // T de taille Nx*Ny
 {
 
   int Ny = _df->Get_Ny();
@@ -114,10 +128,9 @@ VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T)
   VectorXd derive2 (_Dy.size()+1);
   for (int i=2;i<derive2.size()-2; i++) //Cas général
   {
-    double Tim1 = T[(i-1)*Nx];   // On fait 3 calculs on pourrait en faire qu'1 et récupérer les valeurs déjà calculé
+    double Tim1 = T[(i-1)*Nx];  
     double Ti =  T[i*Nx];
     double Tip1 =  T[(i+1)*Nx];
-
 
     derive2(i) = 2*(_Dy(i-1)*Tip1 + _Dy(i)*Tim1 - (_Dy(i-1)+_Dy(i))*Ti) / (_Dy(i)*_Dy(i)*_Dy(i-1) + _Dy(i-1)*_Dy(i-1)*_Dy(i));
   }
@@ -130,69 +143,8 @@ VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T)
   return derive2;
 }
 
+//----------------------------Numéro de la case--------------------------------
 
-// VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T)
-// {
-//   double Ny = _df->Get_Ny();
-//   double Nx = _df->Get_Nx();
-//   VectorXd derive2(Ny+1), derive1(Ny+1);
-//   VectorXd U(Ny+1);
-//
-//   //Calcul de U
-//   U(0)=T(0);
-//   for (int i=1;i<=Ny-1; i++)
-//   {
-//     U(i)=(T((i-1)*Nx)+T(i*Nx))/2.;
-//   }
-//   U(Ny)=T((Ny-1)*Nx);
-//
-//   //Calcul de U1
-//   derive1(0)=(U(1)-U(0))/(_Y(1)-_Y(0));
-//   for (int i=1;i<=Ny-1; i++)
-//   {
-//     U(i)=(T(i-1)+T(i))/2.;
-//   }
-//   derive1(Ny)=(U(Ny)-U(Ny-1))/(_Y(Ny)-_Y(Ny-1));
-//
-//   //Calcul de U2
-//   derive2(0) = (2./pow(_Y(1)-_Y(0),2))*(U(1)-U(0)-(_Y(1)-_Y(0))*derive1(0));
-//   for (int i=1;i<=Ny-2; i++) //Cas général (1 à Ny-1)
-//   {
-//     double U2g = (2./pow(_Y(i-1)-_Y(i),2))*(U(i-1)-U(i)-(_Y(i-1)-_Y(i))*derive1(i));
-//     double U2d = (2./pow(_Y(i+1)-_Y(i),2))*(U(i+1)-U(i)-(_Y(i+1)-_Y(i))*derive1(i));
-//
-//     derive2(i) = (U2d*(_Y(i+1)-_Y(i))-U2g*(_Y(i-1)-_Y(i)))/((_Y(i+1)-_Y(i))-(_Y(i-1)-_Y(i)));
-//   }
-//   derive2(Ny) = (2./pow(_Y(Ny-1)-_Y(Ny),2))*(U(Ny-1)-U(Ny)-(_Y(Ny-1)-_Y(Ny))*derive1(Ny));
-//
-//   return derive2;
-// }
-
-
-
-void Mesh_Adapt::save_vector_mesh(Eigen::VectorXd Y, std::string a) // pour le mesh
-{
-  ofstream flux;
-  flux.open(a);
-  for (int i=0; i<Y.size();i++)
-  {
-    flux << Y(i) << " " << 0 << endl;
-  }
-  flux.close();
-}
-
-void Mesh_Adapt::save_vector(Eigen::VectorXd U, Eigen::VectorXd Y, std::string a) // pour voir U2
-{
-  //cout << "Dans le fichier "+a+" le vecteur U est de taill "<<U.size()<<" et Y est de taille "<<Y.size()<<endl;
-  ofstream flux;
-  flux.open(a);
-  for (int i=0; i<Y.size()-1;i++)
-  {
-    flux << Y(i) << " " << U(i*_df->Get_Nx()) << endl;
-  }
-
-  flux.close();
-}
 
 int Mesh_Adapt::cellule(double distance) //A changer surement avec l'adaptation de maillage !!!!!!!!!!!!!!!!!!
 {

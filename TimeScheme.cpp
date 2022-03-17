@@ -11,9 +11,10 @@ using namespace std;
 
 // Constructeur par défaut (ne pas oublier de mettre votre pointeur à 0 !!)
 TimeScheme::TimeScheme(DataFile* data_file, FiniteVolume* fin_vol) :
-_df(data_file), _fin_vol(fin_vol), _t(_df->Get_t0())
+_df(data_file), _fin_vol(fin_vol), _t(_df->Get_t0()), _sol(data_file)
 {
 	InitialCondition();
+
 }
 
 
@@ -31,13 +32,15 @@ void TimeScheme::InitialCondition()
 	double dy = _df->Get_dy();
 	double xmin = _df->Get_xmin();
   double ymin = _df->Get_ymin();
-	_sol.resize(Nx*Ny);
+	_sol.Get_T().resize(Nx*Ny);//inutile et ne compile pas ?????
 
 	for (int j=0; j<Ny; ++j)
 	{
 		for (int i=0; i<Nx; ++i)
 		{
-			_sol(j*Nx+i)=_fin_vol->Get_fct()->InitialCondition((i+1)*dx+xmin,(j+1)*dy+ymin);
+			//_sol.T(j*Nx+i) =_fin_vol->Get_fct()->InitialCondition((i+1)*dx+xmin,(j+1)*dy+ymin);
+			_sol.T(j*Nx+i) =  _fin_vol->Get_fct()->InitialCondition((i+1)*dx+xmin,(j+1)*dy+ymin);
+
 		}
 	}
 	// cout << "-------------------------------" << endl;
@@ -45,14 +48,15 @@ void TimeScheme::InitialCondition()
 	// cout << _sol << endl;
 	// cout << "-------------------------------" << endl;
 
-	_rho.resize(Nx*Ny);
+	_sol.Get_rho().resize(Nx*Ny);//inutile
 
 	//Ajout d'un vecteur masse volumique
 	for (int j=0; j<Ny; ++j)
 	{
 		for (int i=0; i<Nx; ++i)
 		{
-			_rho(j*Nx+i)=_fin_vol->Get_fct()->InitialConditionrho((i+1)*dx+xmin,(j+1)*dy+ymin);
+			//_sol.rho(j*Nx+i)=_fin_vol->Get_fct()->InitialConditionrho((i+1)*dx+xmin,(j+1)*dy+ymin);
+			_sol.rho(j*Nx+i) = _fin_vol->Get_fct()->InitialConditionrho((i+1)*dx+xmin,(j+1)*dy+ymin);
 		}
 	}
 }
@@ -77,30 +81,30 @@ void ImplicitEulerScheme::Advance()
 
 	//Calcul de _rhostar
 	Eigen::VectorXd Arr;
-	Arr=_fin_vol->Get_fct()->Arrhenius(_rho,_sol);
-	_rhostar=_rho+dt*Arr;
+	Arr=_fin_vol->Get_fct()->Arrhenius(_sol.rho,_sol.T);
+	_sol.rhostar=_sol.rho+dt*Arr; // ne compile pas ?, il faut une fonction set ???
 
 
 	//Calcul de Tn+1
-	_fin_vol->Build_flux_mat(_rho,_rhostar); //Build_flux_mat_and_BC_RHS(_t);
-	_fin_vol->Build_BC_RHS(_t,_rho,_rhostar);
+	_fin_vol->Build_flux_mat(_sol.rho,_sol.rhostar); //Build_flux_mat_and_BC_RHS(_t);
+	_fin_vol->Build_BC_RHS(_t,_sol.rho,_sol.rhostar);
 	Eigen::VectorXd BC_RHS=_fin_vol->Get_BC_RHS();
 	SparseMatrix<double> A=_fin_vol->Get_mat_flux();
 	Eigen::VectorXd b;
 	_solver_direct.analyzePattern(A);
 	_solver_direct.factorize(A);
 
-	b=_sol+BC_RHS;
-	_sol=_solver_direct.solve(b);
+	b=_sol.T+BC_RHS;
+	_sol.T=_solver_direct.solve(b);
 
 
 	//Calcul de rhon+1
 	double Aref=_df->Get_Aref(), Ta=_df->Get_Ta(), rhov=_df->Get_rhov(), rhop=_df->Get_rhop();
-	Arr=_fin_vol->Get_fct()->Arrhenius(_rhostar,_sol);
+	Arr=_fin_vol->Get_fct()->Arrhenius(_sol.rhostar,_sol.T);
 	double B = rhov*Aref*dt/(rhov-rhop);
-	for (int i=0; i<_rho.size() ;i++)
+	for (int i=0; i<_sol.rho.size() ;i++)
 	{
-		_rho(i)=(_rho(i)+B*rhop*exp(-Ta/_sol(i)))/(1.+B*exp(-Ta/_sol(i)));
+		_sol.rho(i)=(_sol.rho(i)+B*rhop*exp(-Ta/_sol.T(i)))/(1.+B*exp(-Ta/_sol.T(i)));//c'est la méthode rho(double n)
 	}
 
 
@@ -110,23 +114,14 @@ void ImplicitEulerScheme::Advance()
 	//cout << "voilà b" << _t << endl;
 	//cout << b << endl;
 	// cout << "-------------------------------" << endl;
+
 }
 
 
-const Eigen::VectorXd & TimeScheme::GetSolution() const
+
+void TimeScheme::SaveSol(Solution sol, string n_sol, int n)
 {
-  return _sol;
-}
 
-
-const Eigen::VectorXd & TimeScheme::GetSolutionrho() const
-{
-  return _rho;
-}
-
-
-void TimeScheme::SaveSol(Eigen::VectorXd sol, string n_sol, int n)
-{
 	string n_file = _df->Get_results() + "/" + n_sol + to_string(n) + ".vtk";
 	ofstream solution;
 	solution.open(n_file, ios::out);
@@ -148,7 +143,7 @@ void TimeScheme::SaveSol(Eigen::VectorXd sol, string n_sol, int n)
 	{
 		for(int i=0; i<Nx; ++i)
 		{
-			solution << sol(i+j*Nx) << " ";
+			solution << sol.T(i+j*Nx) << " ";
 		}
 		solution << endl;
 	}
