@@ -39,7 +39,8 @@ DataFile::DataFile(std::string file_name)
   _Aref = toml::find<double>(other, "Aref");
   _Ta =  toml::find<double>(other, "Ta");
   _Lm = toml::find<double>(other, "Lm");
-
+  _CastestnonUnif = toml::find<std::string>(other, "CastestnonUnif");  // pour le maillage non uniforme!!!!!!!!!!!!
+  _epsilon_adapt = toml::find<double>(other, "epsilon_adapt"); 
   system(("rm -r ./" + _results).c_str());
   system(("mkdir -p ./" + _results).c_str());
 

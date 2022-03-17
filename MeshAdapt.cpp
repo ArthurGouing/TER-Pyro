@@ -17,12 +17,18 @@ _df(data_file)
   _Dy.resize(_df->Get_Ny()); //taille de Dy=nombre de cases verticales
   _Y.resize(_df->Get_Ny()+1);
   _Y(0)=0.;
-  for (int i=0; i<_Dy.size(); i++)
+  if (_df->Get_CastestnonUnif() == "oui") //ajout du cas maillage non uniforme  attention au datafile!!!!!!!
   {
-    _Dy(i) =_df->Get_dy();
-    _Y(i+1) = _Y(i)+_df->Get_dy();
+    Maillage_non_uniforme();
   }
-
+  else
+  {
+    for (int i=0; i<_Dy.size(); i++)
+    {
+      _Dy(i) =_df->Get_dy();
+      _Y(i+1) = _Y(i)+_df->Get_dy();
+    }
+  }
   ////////////////////////////Nouveau pour le test
   int i=0;
   ifstream fichier("Eulerexplicite_ci_1_cl_1_L_0._tmax_4.0_imax_1000.dat", ios::in);  //Ouverture d'un fichier en lecture
@@ -61,6 +67,39 @@ _df(data_file)
   }
 
 }
+
+
+void Mesh_Adapt::Maillage_non_uniforme() // Calcul du maillage non uniforme !!!!!!!
+{
+  double a , Ny=_df->Get_Ny() , dy=_df->Get_dy() , taille=Ny*dy , length(0);
+  a=(taille-dy/2.*Ny)/(Ny*Ny-Ny*(Ny+1)/2.);
+  for (int i=0 ; i<Ny ;  i++ )
+  {
+    _Dy(i)=(Ny-i-1)*a+dy/2.;
+    cout << _Dy(i) << endl;
+    length+=_Dy(i);
+  }
+  cout <<"la longueur totale suivant y est " << length << endl;
+
+}
+
+void Mesh_Adapt::Maillage_Dystar()
+{
+  _Dystar = (_Dy+_Dyold)/2. ;
+}
+
+  double Mesh_Adapt::NormLinf()
+  {
+    double norm(0.);
+    for (int i=0; i < _Dy.size(); i++)
+    {
+      if (abs(_Dy(i)-_Dyold(i))>norm)
+      {
+        norm=abs(_Dy(i)-_Dyold(i));
+      }
+    }
+    return norm;
+  }
 
 void Mesh_Adapt::Update(VectorXd T)
 {
@@ -279,11 +318,28 @@ void Mesh_Adapt::save_vector(Eigen::VectorXd U, Eigen::VectorXd Y, std::string a
   flux.close();
 }
 
-int Mesh_Adapt::cellule(double distance) //A changer surement avec l'adaptation de maillage !!!!!!!!!!!!!!!!!!
+int Mesh_Adapt::cellule(double distance)
 {
   int Nx=_df->Get_Nx(), Ny=_df->Get_Ny();
   double dy = _df->Get_dy();
-  int Nydist = (Nx*(Ny-int(ceil(distance/dy)))-1);
+  int Nydist; //(Nx*(Ny-int(ceil(distance/dy)))-1);
+  double sommedist = 0., sommedist2=0.;
+  int i=0;
+
+  while (sommedist<=distance)
+  {
+    sommedist+=_Dy(Ny-1-i);
+    i+=1;
+  }
+  sommedist2=sommedist-_Dy(Ny-1-(i-1));
+  if (abs(sommedist2-distance)<abs(sommedist-distance))
+  {
+    Nydist = (Nx*(Ny-(i-1))-1);
+  }
+  else
+  {
+    Nydist = (Nx*(Ny-i)-1);
+  }
 
   return Nydist;
 }
