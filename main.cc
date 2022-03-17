@@ -4,7 +4,9 @@
 #include "TimeScheme.h"
 
 //ceci est un testubububivivi
-using namespace Eigen;
+jhuu
+,ikhhikj
+using namespace Eigenbib juj;
 using namespace std;
 
 int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et argv[0]="./laplacian" argv[1]="dataSmallCase.toml"
