@@ -8,6 +8,7 @@
 class DataFile {
 private:
   // Tous les paramètres contenus dans le fichier de données
+  double _epsilon_adapt;
   double _lambdapv;
   double _rhov, _rhop;
   double _cpv;
@@ -28,7 +29,7 @@ private:
   std::string _scheme;
   std::string _which_scenario;
   std::string _results;
-  std::string _LBC, _RBC, _DBC, _UBC;
+  std::string _LBC, _RBC, _DBC, _UBC , _CastestnonUnif;
   // Nom du fichier de données
   const std::string _file_name;
   // Pour savoir si l'utilisateur a donné la valeur du paramètres
@@ -51,6 +52,7 @@ public:
   // Constructeur
   DataFile(std::string file_name);
 
+  const double & Get_epsilon_adapt() const {return _epsilon_adapt;};
   const double & Get_xmin() const {return _xmin;};
   const double & Get_xmax() const {return _xmax;};
   const double & Get_dx() const {return _dx;};
@@ -77,6 +79,7 @@ public:
   const std::string & Get_RBC() const {return _RBC;};
   const std::string & Get_DBC() const {return _DBC;};
   const std::string & Get_UBC() const {return _UBC;};
+  const std::string & Get_CastestnonUnif() const {return _CastestnonUnif;};
   const std::string Get_scenario() const {return _which_scenario;};
 };
 
