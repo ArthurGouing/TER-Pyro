@@ -56,17 +56,21 @@ void TimeScheme::InitialCondition()
 		}
 	}
 }
-
-void TimeScheme::rho(double T)
+//rho: résolution EDO ----test sur rho_test
+void TimeScheme::rho()
 {
-	double rho, C,rhov,rhop,A,Ta;
+	double dt=_df->Get_dt();
+	_t=_t+dt;
+	double C,rhov,rhop,A,Ta;
 	rhov=_df->Get_rhov();
 	A=_df->Get_Aref();
 	Ta=_df->Get_Ta();
-	C=(rhov*A)*exp(-Ta/T)/(rhov-rhop);
 	rhop=_df->Get_rhop(); //////t=0; rho=rhop CI
-	rho=rhop*exp(-C*t)+rhop;
-
+	C=(rhov*A)/(rhov-rhop);
+	for(int i=0;i<size(_sol);i++)
+	{
+		_rho(i)=rhop*exp(-C*exp(-Ta/_sol(i))*_t)+rhop;
+	}
 }
 
 
@@ -88,9 +92,9 @@ void ImplicitEulerScheme::Advance()
 
 
 	//Calcul de _rhostar
-	Eigen::VectorXd Arr;
-	Arr=_fin_vol->Get_fct()->Arrhenius(_rho,_sol);
-	_rhostar=_rho+dt*Arr;
+	// Eigen::VectorXd Arr;
+	// Arr=_fin_vol->Get_fct()->Arrhenius(_rho,_sol);
+	// _rhostar=_rho+dt*Arr;
 
 
 	//Calcul de Tn+1
@@ -107,13 +111,13 @@ void ImplicitEulerScheme::Advance()
 
 
 	//Calcul de rhon+1
-	double Aref=_df->Get_Aref(), Ta=_df->Get_Ta(), rhov=_df->Get_rhov(), rhop=_df->Get_rhop();
-	Arr=_fin_vol->Get_fct()->Arrhenius(_rhostar,_sol);
-	double B = rhov*Aref*dt/(rhov-rhop);
-	for (int i=0; i<_rho.size() ;i++)
-	{
-		_rho(i)=(_rho(i)+B*rhop*exp(-Ta/_sol(i)))/(1.+B*exp(-Ta/_sol(i)));
-	}
+	// double Aref=_df->Get_Aref(), Ta=_df->Get_Ta(), rhov=_df->Get_rhov(), rhop=_df->Get_rhop();
+	// Arr=_fin_vol->Get_fct()->Arrhenius(_rhostar,_sol);
+	// double B = rhov*Aref*dt/(rhov-rhop);
+	// for (int i=0; i<_rho.size() ;i++)
+	// {
+	// 	_rho(i)=(_rho(i)+B*rhop*exp(-Ta/_sol(i)))/(1.+B*exp(-Ta/_sol(i)));
+	// }
 
 
 	// cout << "-------------------------------" << endl;
@@ -182,6 +186,10 @@ void TimeScheme::Save_rho(Eigen::VectorXd rho , double t , std::string name_file
 	solution_rho.close();
 }
 
+
+
+
+
 //------1 metre de distance<<<<<<<<<----------------------------------------------------------------------
 
 
@@ -201,7 +209,7 @@ double dt=_df->Get_dt();
 double dy = _df->Get_dy();
 // sol1=sol*(t+dt);
 for(int j=1;j<=_sol.size();j++){
-  if(c<0){
+  if(c(j)<0){
     _sol(j)=_sol(j)-(dt/dy)*c(j)*(_sol(j)-_sol(j-1));
   }
   else{
@@ -210,7 +218,6 @@ for(int j=1;j<=_sol.size();j++){
 _t=_t+dt;
 }
 }
-
 
 
 #define _TIME_SCHEME_CPP

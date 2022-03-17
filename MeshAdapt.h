@@ -1,6 +1,6 @@
 #ifndef _MESHADAPT_H
 
-#include "Solution.h" // En fait on en a besoin qu'à partir de timescheme
+//#include "Solution.h" // En fait on en a besoin qu'à partir de timescheme
 #include "DataFile.h"
 #include "Dense"
 #include "Sparse"
@@ -31,6 +31,7 @@ class Mesh_Adapt
   int cellule (double distance);
   void save_vector1(Eigen::VectorXd Y, Eigen::VectorXd Y1,std::string a);
   Eigen::VectorXd vitesse();
+  Eigen::VectorXd moy_arithmetique();
 };
 
 #define _MESHADAPT_H

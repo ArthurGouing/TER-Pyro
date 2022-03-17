@@ -21,7 +21,7 @@ public:
   // alors le compilateur en génère un implicitement.
   virtual ~TimeScheme();
   void InitialCondition();
-  void rho(double T);
+  void rho();
   // Enregistre la solution un fichier
   void SaveSol(Eigen::VectorXd sol, std::string n_sol, int n);
   void Save_rho(Eigen::VectorXd rho , double t , std::string name_file);

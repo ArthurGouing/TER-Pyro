@@ -252,16 +252,24 @@ int Mesh_Adapt::cellule(double distance) //A changer surement avec l'adaptation 
 }
 
 
+VectorXd Mesh_Adapt::moy_arithmetique()
+{
+  VectorXd yetoile;`
+  yetoile.resize(_Y1.size());
+  for(int i=0; i<yetoile.size();i++)
+  {
+    yetoile(i)=(1/2)*(_Y(i+1)-_Y1(i+1));
+  }
+}
 
-
-VectorXd Mesh_Adapt::vitesse()
+VectorXd Mesh_Adapt::vitesse()  ///Y(i+1/2) est le milieu entre 2 noeuds
 {
   VectorXd v;
   v.resize(_Y1.size());
   double dt = _df->Get_dt();
   for(int i=0; i<v.size();i++)
   {
-    v(i)=(_Y(i)-_Y1(i))/dt;
+    v(i)=((_Y(i+1)-_Y(i))/(2*dt))-(_Y1(i+1)-_Y1(i))/(2*dt));
   }
   return v;
 }
