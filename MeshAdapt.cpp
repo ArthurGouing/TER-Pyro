@@ -31,8 +31,8 @@ _df(data_file)
 
 void Mesh_Adapt::Update(Solution & sol)//Soluiton sol en entrée
 {
-  //calcul u
 
+  //Initialisation
   int Nx = _df->Get_Nx();
   int Ny = _df->Get_Ny();
   double Ly = _df->Get_ymax();
@@ -100,13 +100,13 @@ void Mesh_Adapt::Update(Solution & sol)//Soluiton sol en entrée
 
   Ysolv = solver.solve(b);
 
-  for (int i=1; i<_Y.size()-1;i++) //On remplit M
+  for (int i=1; i<_Y.size()-1;i++) //On remplit _Y
   {
     _Y(i)=Ysolv(i-1);
   }
 
 
-  // On détermine les _Dy a partir des nouveaux _Y
+  // On détermine les _Dy a partir des nouveaux _Y calculés
   for (int i=0;i<_Dy.size();i++)
   {
     _Dy(i)= _Y(i+1)-_Y(i);
@@ -128,7 +128,7 @@ VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T) // T de taille Nx*Ny
   VectorXd derive2 (_Dy.size()+1);
   for (int i=2;i<derive2.size()-2; i++) //Cas général
   {
-    double Tim1 = T[(i-1)*Nx];
+    double Tim1 = T[(i-1)*Nx];  
     double Ti =  T[i*Nx];
     double Tip1 =  T[(i+1)*Nx];
 
@@ -144,6 +144,7 @@ VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T) // T de taille Nx*Ny
 }
 
 //----------------------------Numéro de la case--------------------------------
+
 
 int Mesh_Adapt::cellule(double distance) //A changer surement avec l'adaptation de maillage !!!!!!!!!!!!!!!!!!
 {

@@ -109,10 +109,10 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
     Solution_tn = time_scheme->Get_Solution();
     //Savoir comment faire ????
     if (maillage=="adapt")
-    {
       mesh_adapt->Update(Solution_tn); // remplacer par le rho de la class Solution
     }
-    for (int i = 0; i <= 4 ; i++)
+
+    for (int i = 0; i <= 4 ; i++) // Sauvegarde des valeurs à 1mm 2mm etc du bord
     {
       templist[i] << tn << " " << temp(Nylist[i]) << endl;
       if (data_file->Get_Aref()!=0.)
