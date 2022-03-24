@@ -25,7 +25,8 @@ class Mesh_Adapt
   Eigen::VectorXd Derive_y_2(Eigen::VectorXd rho);
   const Eigen::VectorXd Get_Dy() const {return _Dy;};
   //Fonction numéro de cellule
-  const Eigen::VectorXd Get_Dystar() const {return _Dystar;};/////!!!!!!
+  const Eigen::VectorXd Get_Dystar() const {return _Dystar;};
+  const Eigen::VectorXd Get_Dyold()  const {return _Dyold;};
   void Maillage_Dystar();
   double NormLinf();
   int cellule (double distance);
