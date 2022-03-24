@@ -8,6 +8,7 @@
 class DataFile {
 private:
   // Tous les paramètres contenus dans le fichier de données
+  double _epsilon_adapt;
   double _lambdapv;
   double _rhov, _rhop;
   double _cpv;
@@ -51,6 +52,7 @@ public:
   // Constructeur
   DataFile(std::string file_name);
 
+  const double & Get_epsilon_adapt() const {return _epsilon_adapt;};
   const double & Get_xmin() const {return _xmin;};
   const double & Get_xmax() const {return _xmax;};
   const double & Get_dx() const {return _dx;};

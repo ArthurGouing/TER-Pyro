@@ -9,4 +9,4 @@ plot "pyro/Rho_0mm.dat" title "Rho à la paroi" w l, "pyro/Rho_1mm.dat" title "R
 set terminal png size 1024,768
 set output "Courbes/Courbespyro/Evolution de rho en fonction du temps à différentes distances de la paroi avec pyrolyse.png"
 replot
-set term wxt
+
