@@ -94,7 +94,7 @@ void FiniteVolume::Build_flux_mat(VectorXd rho, VectorXd rhostar)
 
 
 
-void FiniteVolume::Build_BC_RHS(const double& t, VectorXd rho, VectorXd rhostar)
+void FiniteVolume::Build_BC_RHS(const double& t, VectorXd rho, VectorXd rhostar) //Validé
 {
 	int Nx=_df->Get_Nx();
 	int Ny= _df->Get_Ny();
@@ -118,9 +118,7 @@ void FiniteVolume::Build_BC_RHS(const double& t, VectorXd rho, VectorXd rhostar)
 	//Partie pyro
 	for (int i=0; i<=Nx*Ny-1; i++)
 	{
-		_BC_RHS(i)+=(1.-(rhostar(i)/rho(i)) * Dy(i/Nx)/Dyold(i/Nx) )*((Lm/cpv)-T0);
-		//Terme d'UpWind
-		_BC_RHS(i)+=
+		_BC_RHS(i)+=(1.-(rhostar(i)/rho(i)))*((Lm/cpv)-T0);
 	}
 
 	// cout << "-------------------------------" << endl;
@@ -130,8 +128,7 @@ void FiniteVolume::Build_BC_RHS(const double& t, VectorXd rho, VectorXd rhostar)
 }
 
 
-
-void FiniteVolume::Build_flux_mat_ALE(VectorXd rho, VectorXd rhostar)
+void FiniteVolume::Build_flux_mat_ALE(Solution sol)
 {
 	vector<Triplet<double>> triplets;
 	int Nx    =_df->Get_Nx();
@@ -147,7 +144,7 @@ void FiniteVolume::Build_flux_mat_ALE(VectorXd rho, VectorXd rhostar)
 	double lambdapv=_df->Get_lambdapv(), cpv = _df->Get_cpv();
 	for (int k=0; k<Nx*Ny; ++k)
 	{
-		sigma(k)=lambdapv/(rho(k)*cpv);
+		sigma(k)=lambdapv/(sol.rho(k)*cpv);
 	}
 
 
@@ -158,7 +155,7 @@ void FiniteVolume::Build_flux_mat_ALE(VectorXd rho, VectorXd rhostar)
 	vector<Triplet<double>> tripletsId;
 	for (int i=0; i<Nx*Ny; ++i)
 	{
-		tripletsId.push_back({i,i,rhostar(i)/rho(i)*Dy(i/Nx)/Dyold(i/Nx)}); // Verif le i/Dx
+		tripletsId.push_back({i,i,sol.rhostar(i)/sol.rho(i)*Dy(i/Nx)/Dyold(i/Nx)}); // Verif le i/Dx
 	}
 	Idtilde.setFromTriplets(tripletsId.begin(), tripletsId.end());
 
@@ -171,7 +168,7 @@ void FiniteVolume::Build_flux_mat_ALE(VectorXd rho, VectorXd rhostar)
 	for (int i=0; i<Ny ; i++)
 	{
 		Fy(i)=1./pow(Dy(i),2);
-		Fystar(i)=1./pow(Dystar(i),2)
+		Fystar(i)=1./pow(Dystar(i),2);
 	}
 	//------------------Id+sigma*dt*H ou Idtilde+sigmak*dt*H-------------------//
 	_mat_flux.resize(Nx*Ny,Nx*Ny);
@@ -195,8 +192,8 @@ void FiniteVolume::Build_flux_mat_ALE(VectorXd rho, VectorXd rhostar)
 		{
 			triplets.push_back({i+(k-1)*Nx-1,i+(k-1)*Nx-1 ,sigma(i+(k-1)*Nx-1)* 1./(Dyold(k-1)*Dystar(k-1)) });// MEME PROBLEME
 			triplets.push_back({i+(k-1)*Nx-1,i+(k)*Nx-1   ,sigma(i+(k-1)*Nx-1)*-1./(Dyold(k-1)*Dystar(k-1)) }); // -NX PAS SUUUUUR
-			triplets.push_back({i+(k)*Nx-1,  i+(k)*Nx-1   ,sigma(i+(k-1)*Nx+Nx-1)* 1./(Dyold(k)/Dystar(k))); // MEME PROBLEME
-			triplets.push_back({i+(k)*Nx-1,  i+(k-1)*Nx-1 ,sigma(i+(k-1)*Nx+Nx-1)*-1./(Dyold(k)/Dystar(k))});//+NX  PAS SUUUUR
+			triplets.push_back({i+(k)*Nx-1,  i+(k)*Nx-1   ,sigma(i+(k-1)*Nx+Nx-1)* 1./(Dyold(k)/Dystar(k)) }); // MEME PROBLEME
+			triplets.push_back({i+(k)*Nx-1,  i+(k-1)*Nx-1 ,sigma(i+(k-1)*Nx+Nx-1)*-1./(Dyold(k)/Dystar(k)) });//+NX  PAS SUUUUR
 		}
 	}
 	_mat_flux.setFromTriplets(triplets.begin(), triplets.end());
@@ -208,35 +205,51 @@ void FiniteVolume::Build_flux_mat_ALE(VectorXd rho, VectorXd rhostar)
 
 // ALE pour arbitraty Lagrangian-Eulerian Methods
 void FiniteVolume::Build_BC_RHS_ALE(const double& t, Solution sol)
-
-int Nx=_df->Get_Nx();
-int Ny= _df->Get_Ny();
-double dt = _df->Get_dt();
-VectorXd Dy =_adm->Get_Dy();
-double lambdapv=_df->Get_lambdapv(), cpv = _df->Get_cpv();
-double Lm = _df->Get_Lm();
-double T0 = _df->Get_T0();
-_BC_RHS.resize(Nx*Ny);
-
-//Partie non pyro
-for (int i=0; i<=Nx*Ny-Nx-1; i++)
 {
-	_BC_RHS(i)=0.;
+	int Nx=_df->Get_Nx();
+	int Ny= _df->Get_Ny();
+	double dt = _df->Get_dt();
+	VectorXd Dy =_adm->Get_Dy();
+	VectorXd Dyold  =_adm->Get_Dyold();
+	double lambdapv=_df->Get_lambdapv(), cpv = _df->Get_cpv();
+	double Lm = _df->Get_Lm();
+	double T0 = _df->Get_T0();
+	_BC_RHS.resize(Nx*Ny);
+
+	//Partie non pyro
+	for (int i=0; i<=Nx*Ny-Nx-1; i++)
+	{
+		_BC_RHS(i)=0.;
+	}
+	for (int i=Nx*Ny-Nx; i<=Nx*Ny-1; i++)
+	{
+		_BC_RHS(i)=(dt*lambdapv/(sol.rho(i)*cpv*Dy(Dy.size()-1)))*_fct->SourceFunction(t);
+	}
+
+	//Partie pyro
+	for (int i=0; i<=Nx*Ny-1; i++)
+	{
+		VectorXd c; //vitesse d'advection
+		c=_adm->Get_vitesse();
+		_BC_RHS(i)+= (1.-(sol.rhostar(i)/sol.rho(i)) * Dy(i/Nx)/Dyold(i/Nx) )*((Lm/cpv)-T0);
+		//Terme d'UpWind
+		_BC_RHS(i)+= max(0,c(i/Nx)) * (sol.T(i)-T0)-Lm/cpv  * dt/Dy(i/Nx)   /// les Vj ne sont pa défini faudra appelé la fonction upwind à la bonne itération
+		- max(0,-c(i/Nx)) * (sol.T(i+Nx)-T0)-Lm/cpv* dt/Dy(i/Nx)
+		+ max(0,-c((i-1)/Nx)) * (sol.T(i)-T0)-Lm/cpv   * dt/Dy(i/Nx)
+		- max(0,c((i-1)/Nx)) * (sol.T(i+Nx)-T0)-Lm/cpv* dt/Dy(i/Nx);
+	}
 }
-for (int i=Nx*Ny-Nx; i<=Nx*Ny-1; i++)
-{
-	_BC_RHS(i)=(dt*lambdapv/(sol.rho(i)*cpv*Dy(Dy.size()-1)))*_fct->SourceFunction(t);
-}
 
-//Partie pyro
-for (int i=0; i<=Nx*Ny-1; i++)
+double FiniteVolume::max(double a, double b)
 {
-	_BC_RHS(i)+= (1.-(sol.rhostar(i)/sol.rho(i)) * Dy(i/Nx)/Dyold(i/Nx) )*((Lm/cpv)-T0);
-	//Terme d'UpWind
-	_BC_RHS(i)+= Vj+1/2 * (sol.T(i)-T0)-Lm/cpv)  * dt/Dy(i/Nx)   /// les Vj ne sont pa défini faudra appelé la fonction upwind à la bonne itération
-						 - Vj+1/2 * (sol.T(i+Nx)-T0)-Lm/cpv* dt/Dy(i/Nx)
-						 + Vj-1/2 * (sol.T(i)-T0)-Lm/cpv   * dt/Dy(i/Nx)
-						 - Vj-1/2 * (sol.T(i+Nx)-T0)-Lm/cpv* dt/Dt(i/Nx);
+	if (a>b)
+	{
+		return a;
+	}
+	else
+	{
+		return b;
+	}
 }
 
 

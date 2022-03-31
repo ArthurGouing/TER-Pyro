@@ -14,7 +14,8 @@ class Mesh_Adapt
   //Vecteur contenant les taille dy de chaques mailles
   Eigen::VectorXd _Dy,_Dystar,_Dyold;
   //Vecteur contenant les positions des "noeuds" de chaques mailles selon Y
-  Eigen::VectorXd _Y;
+  Eigen::VectorXd _Y,_Y1;
+  Eigen::VectorXd _v;
   //Pointeur vers le fichier de données
   DataFile* _df;
  public:
@@ -30,6 +31,9 @@ class Mesh_Adapt
   void Maillage_Dystar();
   double NormLinf();
   int cellule (double distance);
+
+  void vitesse();
+  const Eigen::VectorXd Get_vitesse() const {return _v;}
 };
 
 #define _MESHADAPT_H
