@@ -17,6 +17,8 @@ _df(data_file)
 {
   _Dy.resize(_df->Get_Ny()); //taille de Dy=nombre de cases verticales
   _Y.resize(_df->Get_Ny()+1);
+  _Y1.resize(_df->Get_Ny()+1);
+  _v.resize(_Y1.size()-1);
   _Y(0)=0.;
   if (_df->Get_CastestnonUnif() == "oui") //ajout du cas maillage non uniforme  attention au datafile!!!!!!!
   {
@@ -105,6 +107,8 @@ void Mesh_Adapt::Update(Solution & sol)//Soluiton sol en entrée
   solver.factorize(M);
 
   Ysolv = solver.solve(b);
+
+  _Y1=_Y;   //vecteur position à l'instant avant update
 
   for (int i=1; i<_Y.size()-1;i++) //On remplit _Y
   {
@@ -211,6 +215,17 @@ double Mesh_Adapt::NormLinf()
   }
   return norm;
 }
+//------------------------------------------------------------------------------
+void Mesh_Adapt::vitesse()  ///Y(i+1/2) est le milieu entre 2 noeuds
+{
+  double dt = _df->Get_dt();
+  for(int i=0; i<_v.size();i++)
+  {
+    _v(i)=(_Y(i+1)-_Y(i))/(2*dt)-(_Y1(i+1)-_Y1(i))/(2*dt); // vi+1/2
+  }
+}
+
+
 
 #define _MESHADAPT_CPP
 #endif
