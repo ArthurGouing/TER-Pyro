@@ -22,7 +22,7 @@ void FiniteVolume::Build_flux_mat(VectorXd rho, VectorXd rhostar)
 	int Ny= _df->Get_Ny();
 	double dt = _df->Get_dt();
 	double dx = _df->Get_dx();
-	VectorXd Dy =_adm->Get_Dy(), sigma(Nx*Ny);
+	VectorXd Dy =_adm->Get_Dyold(), sigma(Nx*Ny); ////ON a mis Dyold
 
 
 	//Calcul de sigmak
@@ -99,7 +99,7 @@ void FiniteVolume::Build_BC_RHS(const double& t, VectorXd rho, VectorXd rhostar)
 	int Nx=_df->Get_Nx();
 	int Ny= _df->Get_Ny();
 	double dt = _df->Get_dt();
-	VectorXd Dy =_adm->Get_Dy();
+	VectorXd Dy =_adm->Get_Dyold(); ///// On a mis Dyold !!!!!!!!!!!!!
 	double lambdapv=_df->Get_lambdapv(), cpv = _df->Get_cpv();
 	double Lm = _df->Get_Lm();
 	double T0 = _df->Get_T0();

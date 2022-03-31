@@ -28,6 +28,7 @@ public:
   void Save_rho(Eigen::VectorXd rho , double t , std::string name_file);//à changer
   // Une étape du schéma en temps
   virtual void Advance() = 0;
+  virtual void Advance_ALE() = 0;
   // Permet de récupérer _sol
   /*
   const Eigen::VectorXd & GetSolution() const;
@@ -44,6 +45,7 @@ private:
 public:
   ImplicitEulerScheme(DataFile* data_file, FiniteVolume* fin_vol);
   void Advance();
+  void Advance_ALE();
 };
 
 #define _TIME_SCHEME_H

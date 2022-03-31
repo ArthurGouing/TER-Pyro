@@ -23,6 +23,8 @@ T0 = 293.0
 Aref= 0.0 #1000.0
 Ta=6000.0
 Lm=3000000.0
+CastestnonUnif = ""
+epsilon_adapt = 0.01
 
 # Test scenarii
 # Choice between: "noadapt", "adapt"

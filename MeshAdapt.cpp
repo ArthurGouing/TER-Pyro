@@ -16,6 +16,7 @@ Mesh_Adapt::Mesh_Adapt(DataFile* data_file) :
 _df(data_file)
 {
   _Dy.resize(_df->Get_Ny()); //taille de Dy=nombre de cases verticales
+  _Dyold.resize(_df->Get_Ny());
   _Y.resize(_df->Get_Ny()+1);
   _Y1.resize(_df->Get_Ny()+1);
   _v.resize(_Y1.size()-1);
@@ -29,6 +30,7 @@ _df(data_file)
     for (int i=0; i<_Dy.size(); i++)
     {
       _Dy(i) =_df->Get_dy();
+      _Dyold(i)=_df->Get_dy();
       _Y(i+1) = _Y(i)+_df->Get_dy();
     }
   }
@@ -51,6 +53,7 @@ void Mesh_Adapt::Update(Solution & sol)//Soluiton sol en entrée
   double maxU2 =0;
   double metmax=10.0;
 
+  vitesse();
   U2=Derive_y_2(_rho)/5000; // dérivée seconde selon y en x = dx, aux noeuds du maillaage
   for (int i=0; i<U2.size(); i++)
   {
@@ -224,7 +227,18 @@ void Mesh_Adapt::vitesse()  ///Y(i+1/2) est le milieu entre 2 noeuds
     _v(i)=(_Y(i+1)-_Y(i))/(2*dt)-(_Y1(i+1)-_Y1(i))/(2*dt); // vi+1/2
   }
 }
+//------------------------------------------------------------------------------
 
+void Mesh_Adapt::Update_Dystar_vitesse()
+{
+  vitesse();
+  Maillage_Dystar();  
+}
+
+void Mesh_Adapt::Update_Dyold()
+{
+  _Dyold=_Dy;
+}
 
 
 #define _MESHADAPT_CPP

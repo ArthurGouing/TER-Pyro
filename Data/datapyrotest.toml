@@ -1,7 +1,7 @@
 [space]
 xmin = 0.0
-xmax = 0.05
-dx = 0.0004
+xmax = 0.005
+dx = 0.05
 ymin = 0.0
 ymax = 0.01
 dy = 0.00004
@@ -23,8 +23,10 @@ T0 = 293.0
 Aref= 1000.0
 Ta=6000.0
 Lm=-3000000.0
+CastestnonUnif = ""
+epsilon_adapt = 0.01
 
 # Test scenarii
 # Choice between: "noadapt", "adapt"
 [scenarii]
-which_scenario = "noadapt"
+which_scenario = "adapt"

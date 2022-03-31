@@ -31,7 +31,8 @@ class Mesh_Adapt
   void Maillage_Dystar();
   double NormLinf();
   int cellule (double distance);
-
+  void Update_Dyold();
+  void Update_Dystar_vitesse();
   void vitesse();
   const Eigen::VectorXd Get_vitesse() const {return _v;}
 };

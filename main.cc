@@ -134,14 +134,15 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
     if (maillage=="adapt")
     {
       //  Adapation de maillage suivant rho
-      mesh_adapt->Update(Solution_tn); //mesh_adapt->Update(temp);
       while (mesh_adapt->NormLinf() < data_file->Get_epsilon_adapt()) // boucle pour rafinner le maillage
       {
-        //calcul de la solution à "tn" sur le maillage "m+1" (_Dy) à partir du maillage "m" (_Dyold)
-        //à l'aide la nouvelle methode / matrice donc un nouveau advance dnas timescheme...!!!!!!!!!!!!!!
         mesh_adapt->Update(Solution_tn); //mesh_adapt->Update(temp);
+        mesh_adapt->Update_Dystar_vitesse();
+        time_scheme->Advance_ALE();
+        //calcul de la solution à "tn" sur le maillage "m+1" (_Dy) à partir du maillage "m" (_Dyold)
+        //à l'aide la nouvelle methode / matrice donc un nouveau advance dnas timescheme...!!!!!!!!!!!!!
       }
-      //Sauvegarde du maillage CI dans le advance2 et update apres la boucle
+      mesh_adapt->Update_Dyold();//Sauvegarde du maillage CI dans le advance2 et update apres la boucle
     }
     for (int i = 0; i <= 4 ; i++)
     {

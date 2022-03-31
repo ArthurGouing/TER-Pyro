@@ -119,6 +119,52 @@ void ImplicitEulerScheme::Advance()
 
 
 
+void ImplicitEulerScheme::Advance_ALE()
+{
+	double dt=_df->Get_dt();
+	_t=_t+dt;
+
+
+	//Calcul de _rhostar
+	Eigen::VectorXd Arr;
+	Arr=_fin_vol->Get_fct()->Arrhenius(_sol.rho,_sol.T);
+	_sol.rhostar=_sol.rho+dt*Arr; // ne compile pas ?, il faut une fonction set ???
+
+
+	//Calcul de Tn+1
+	_fin_vol->Build_flux_mat_ALE(_sol); //Build_flux_mat_and_BC_RHS(_t);
+	_fin_vol->Build_BC_RHS_ALE(_t,_sol);
+	Eigen::VectorXd BC_RHS=_fin_vol->Get_BC_RHS();
+	SparseMatrix<double> A=_fin_vol->Get_mat_flux();
+	Eigen::VectorXd b;
+	_solver_direct.analyzePattern(A);
+	_solver_direct.factorize(A);
+
+	b=_sol.T+BC_RHS;
+	_sol.T=_solver_direct.solve(b);
+
+
+	//Calcul de rhon+1
+	double Aref=_df->Get_Aref(), Ta=_df->Get_Ta(), rhov=_df->Get_rhov(), rhop=_df->Get_rhop();
+	Arr=_fin_vol->Get_fct()->Arrhenius(_sol.rhostar,_sol.T);
+	double B = rhov*Aref*dt/(rhov-rhop);
+	for (int i=0; i<_sol.rho.size() ;i++)
+	{
+		_sol.rho(i)=(_sol.rho(i)+B*rhop*exp(-Ta/_sol.T(i)))/(1.+B*exp(-Ta/_sol.T(i)));//c'est la méthode rho(double n)
+	}
+
+
+	// cout << "-------------------------------" << endl;
+	// cout << "_sol = " << endl;
+	//cout << A << endl;
+	//cout << "voilà b" << _t << endl;
+	//cout << b << endl;
+	// cout << "-------------------------------" << endl;
+
+}
+
+
+
 void TimeScheme::SaveSol(Solution sol, string n_sol, int n)
 {
 
