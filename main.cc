@@ -121,7 +121,7 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   double dtgraph = (data_file->Get_tfinal()/10);
   double cond(dtgraph);
   int compteur(0);
-  for (int n = 1; n <=5 /*nb_iterations*/; n++) // Boucle en temps
+  for (int n = 1; n <= nb_iterations; n++) // Boucle en temps
   {
     tn=n*dt;
     cout << "Iteration : " << n << " Temps : " << tn << " s" << endl;
@@ -131,17 +131,26 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
     rho  = time_scheme->Get_Solution().Get_rho();
     Solution_tn = time_scheme->Get_Solution();
     //Savoir comment faire ????
+    cout << mesh_adapt->NormLinf()<< " " <<data_file->Get_epsilon_adapt() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" <<endl;
     if (maillage=="adapt")
     {
       //  Adapation de maillage suivant rho
-      while (mesh_adapt->NormLinf() < data_file->Get_epsilon_adapt()) // boucle pour rafinner le maillage
+      ///!!!!Il faut faire une sauvegarde de Told
+      mesh_adapt->Update_Told(); //il faut mettre sol en argument
+      while (mesh_adapt->NormLinf() > data_file->Get_epsilon_adapt()) // boucle pour rafinner le maillage
       {
+        mesh_adapt->Update_Dyprevious(); //pour le calcul de la norme
         mesh_adapt->Update(Solution_tn); //mesh_adapt->Update(temp);
+        //cout << "après update" << endl;
         mesh_adapt->Update_Dystar_vitesse();
+        //cout << "après dystar" << endl;
         time_scheme->Advance_ALE();
+        //cout << "après ale" << endl;
         //calcul de la solution à "tn" sur le maillage "m+1" (_Dy) à partir du maillage "m" (_Dyold)
         //à l'aide la nouvelle methode / matrice donc un nouveau advance dnas timescheme...!!!!!!!!!!!!!
+        cout << mesh_adapt->NormLinf()<< " " << data_file->Get_epsilon_adapt() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" <<endl;
       }
+      cout << "après boucle adapt maillage" << endl;
       mesh_adapt->Update_Dyold();//Sauvegarde du maillage CI dans le advance2 et update apres la boucle
     }
     for (int i = 0; i <= 4 ; i++)

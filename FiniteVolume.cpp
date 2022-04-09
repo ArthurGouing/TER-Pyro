@@ -226,17 +226,32 @@ void FiniteVolume::Build_BC_RHS_ALE(const double& t, Solution sol)
 		_BC_RHS(i)=(dt*lambdapv/(sol.rho(i)*cpv*Dy(Dy.size()-1)))*_fct->SourceFunction(t);
 	}
 
+
 	//Partie pyro
-	for (int i=0; i<=Nx*Ny-1; i++)
+	VectorXd c; //vitesse d'advection
+	c=_adm->Get_vitesse();
+	for (int i=0; i<=Nx-1; i++) //Lignes intermédiaires
 	{
-		VectorXd c; //vitesse d'advection
-		c=_adm->Get_vitesse();
 		_BC_RHS(i)+= (1.-(sol.rhostar(i)/sol.rho(i)) * Dy(i/Nx)/Dyold(i/Nx) )*((Lm/cpv)-T0);
 		//Terme d'UpWind
-		_BC_RHS(i)+= max(0,c(i/Nx)) * (sol.T(i)-T0)-Lm/cpv  * dt/Dy(i/Nx)   /// les Vj ne sont pa défini faudra appelé la fonction upwind à la bonne itération
-		- max(0,-c(i/Nx)) * (sol.T(i+Nx)-T0)-Lm/cpv* dt/Dy(i/Nx)
-		+ max(0,-c((i-1)/Nx)) * (sol.T(i)-T0)-Lm/cpv   * dt/Dy(i/Nx)
-		- max(0,c((i-1)/Nx)) * (sol.T(i+Nx)-T0)-Lm/cpv* dt/Dy(i/Nx);
+		_BC_RHS(i)+= max(0,c((i+1)/Nx)) * (sol.T(i)-T0)-Lm/cpv  * dt/Dy(i/Nx)   /// les Vj ne sont pa défini faudra appelé la fonction upwind à la bonne itération
+		- max(0,-c((i+1)/Nx)) * (sol.T(i+Nx)-T0)-Lm/cpv* dt/Dy(i/Nx);
+	}
+	for (int i=Nx; i<=Nx*Ny-Nx-1; i++) //Lignes intermédiaires
+	{
+		_BC_RHS(i)+= (1.-(sol.rhostar(i)/sol.rho(i)) * Dy(i/Nx)/Dyold(i/Nx) )*((Lm/cpv)-T0);
+		//Terme d'UpWind
+		_BC_RHS(i)+= max(0,c((i+1)/Nx)) * (sol.T(i)-T0)-Lm/cpv  * dt/Dy(i/Nx)   /// les Vj ne sont pa défini faudra appelé la fonction upwind à la bonne itération
+		- max(0,-c((i+1)/Nx)) * (sol.T(i+Nx)-T0)-Lm/cpv* dt/Dy(i/Nx)
+		+ max(0,-c(i/Nx)) * (sol.T(i)-T0)-Lm/cpv   * dt/Dy(i/Nx)
+		- max(0,c(i/Nx)) * (sol.T(i-Nx)-T0)-Lm/cpv* dt/Dy(i/Nx);
+	}
+	for (int i=Nx*Ny-Nx; i<=Nx*Ny-1; i++) //Dernière ligne
+	{
+		_BC_RHS(i)+= (1.-(sol.rhostar(i)/sol.rho(i)) * Dy(i/Nx)/Dyold(i/Nx) )*((Lm/cpv)-T0);
+		//Terme d'UpWind
+		_BC_RHS(i)+= max(0,-c(i/Nx)) * (sol.T(i)-T0)-Lm/cpv   * dt/Dy(i/Nx)
+		- max(0,c(i/Nx)) * (sol.T(i-Nx)-T0)-Lm/cpv* dt/Dy(i/Nx);
 	}
 }
 

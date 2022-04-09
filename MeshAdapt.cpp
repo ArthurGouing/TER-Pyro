@@ -16,10 +16,12 @@ Mesh_Adapt::Mesh_Adapt(DataFile* data_file) :
 _df(data_file)
 {
   _Dy.resize(_df->Get_Ny()); //taille de Dy=nombre de cases verticales
+  _Dystar.resize(_df->Get_Ny());
   _Dyold.resize(_df->Get_Ny());
+  _Dyprevious.resize(_df->Get_Ny());
   _Y.resize(_df->Get_Ny()+1);
   _Y1.resize(_df->Get_Ny()+1);
-  _v.resize(_Y1.size()-1);
+  _v.resize(_df->Get_Ny()+1);
   _Y(0)=0.;
   if (_df->Get_CastestnonUnif() == "oui") //ajout du cas maillage non uniforme  attention au datafile!!!!!!!
   {
@@ -211,9 +213,9 @@ double Mesh_Adapt::NormLinf()
   double norm(0.);
   for (int i=0; i < _Dy.size(); i++)
   {
-    if (abs(_Dy(i)-_Dyold(i))>norm)
+    if (abs(_Dy(i)-_Dyprevious(i))>norm)
     {
-      norm=abs(_Dy(i)-_Dyold(i));
+      norm=abs(_Dy(i)-_Dyprevious(i));
     }
   }
   return norm;
@@ -222,22 +224,34 @@ double Mesh_Adapt::NormLinf()
 void Mesh_Adapt::vitesse()  ///Y(i+1/2) est le milieu entre 2 noeuds
 {
   double dt = _df->Get_dt();
-  for(int i=0; i<_v.size();i++)
+  _v(0)=0.;
+  for(int i=1; i<_v.size()-1;i++)
   {
     _v(i)=(_Y(i+1)-_Y(i))/(2*dt)-(_Y1(i+1)-_Y1(i))/(2*dt); // vi+1/2
   }
+  _v(_v.size()-1)=0.;
 }
 //------------------------------------------------------------------------------
 
 void Mesh_Adapt::Update_Dystar_vitesse()
 {
   vitesse();
-  Maillage_Dystar();  
+  Maillage_Dystar();
 }
 
 void Mesh_Adapt::Update_Dyold()
 {
   _Dyold=_Dy;
+}
+
+void Mesh_Adapt::Update_Dyprevious()
+{
+  _Dyprevious=_Dy;
+}
+
+void Mesh_Adapt::Update_Told(sol)
+{
+  _T=_Dy;
 }
 
 

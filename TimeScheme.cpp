@@ -130,7 +130,7 @@ void ImplicitEulerScheme::Advance_ALE()
 	Arr=_fin_vol->Get_fct()->Arrhenius(_sol.rho,_sol.T);
 	_sol.rhostar=_sol.rho+dt*Arr; // ne compile pas ?, il faut une fonction set ???
 
-
+	//cout << "après _rhostar" << endl;
 	//Calcul de Tn+1
 	_fin_vol->Build_flux_mat_ALE(_sol); //Build_flux_mat_and_BC_RHS(_t);
 	_fin_vol->Build_BC_RHS_ALE(_t,_sol);
@@ -143,7 +143,7 @@ void ImplicitEulerScheme::Advance_ALE()
 	b=_sol.T+BC_RHS;
 	_sol.T=_solver_direct.solve(b);
 
-
+	//cout << "après Tn+1" << endl;
 	//Calcul de rhon+1
 	double Aref=_df->Get_Aref(), Ta=_df->Get_Ta(), rhov=_df->Get_rhov(), rhop=_df->Get_rhop();
 	Arr=_fin_vol->Get_fct()->Arrhenius(_sol.rhostar,_sol.T);
@@ -153,7 +153,7 @@ void ImplicitEulerScheme::Advance_ALE()
 		_sol.rho(i)=(_sol.rho(i)+B*rhop*exp(-Ta/_sol.T(i)))/(1.+B*exp(-Ta/_sol.T(i)));//c'est la méthode rho(double n)
 	}
 
-
+	//cout << "après rhon+1" << endl;
 	// cout << "-------------------------------" << endl;
 	// cout << "_sol = " << endl;
 	//cout << A << endl;
