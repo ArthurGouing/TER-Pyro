@@ -11,10 +11,9 @@ using namespace std;
 
 // Constructeur par défaut (ne pas oublier de mettre votre pointeur à 0 !!)
 TimeScheme::TimeScheme(DataFile* data_file, FiniteVolume* fin_vol) :
-_df(data_file), _fin_vol(fin_vol), _t(_df->Get_t0()), _sol(data_file)
+_df(data_file), _fin_vol(fin_vol), _t(_df->Get_t0()), _sol(data_file), _solold(data_file)   //whattttt ???,
 {
 	InitialCondition();
-
 }
 
 
@@ -59,6 +58,13 @@ void TimeScheme::InitialCondition()
 			_sol.rho(j*Nx+i) = _fin_vol->Get_fct()->InitialConditionrho((i+1)*dx+xmin,(j+1)*dy+ymin);
 		}
 	}
+}
+
+
+void TimeScheme::Update_Told_rhoold()
+{
+	_solold.T=_sol.T;
+	_solold.rho=_sol.rho;
 }
 
 

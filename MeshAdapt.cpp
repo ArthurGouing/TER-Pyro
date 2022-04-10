@@ -36,7 +36,6 @@ _df(data_file)
       _Y(i+1) = _Y(i)+_df->Get_dy();
     }
   }
-
 }
 
 //--------------------------------Mise à jour du maillage-----------------------
@@ -247,11 +246,6 @@ void Mesh_Adapt::Update_Dyold()
 void Mesh_Adapt::Update_Dyprevious()
 {
   _Dyprevious=_Dy;
-}
-
-void Mesh_Adapt::Update_Told(sol)
-{
-  _T=_Dy;
 }
 
 

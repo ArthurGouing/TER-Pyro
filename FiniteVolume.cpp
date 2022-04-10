@@ -230,7 +230,7 @@ void FiniteVolume::Build_BC_RHS_ALE(const double& t, Solution sol)
 	//Partie pyro
 	VectorXd c; //vitesse d'advection
 	c=_adm->Get_vitesse();
-	for (int i=0; i<=Nx-1; i++) //Lignes intermédiaires
+	for (int i=0; i<=Nx-1; i++) //Première ligne
 	{
 		_BC_RHS(i)+= (1.-(sol.rhostar(i)/sol.rho(i)) * Dy(i/Nx)/Dyold(i/Nx) )*((Lm/cpv)-T0);
 		//Terme d'UpWind

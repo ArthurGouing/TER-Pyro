@@ -11,7 +11,7 @@ protected:
   FiniteVolume* _fin_vol;
   //Vecteur initial et vecteur solution
   //Eigen::VectorXd _sol, _rho, _rhostar;
-  Solution _sol;
+  Solution _sol, _solold; //_soldold contient ce dont on a besoin comme CI pour faire l'adaptation de maillage
   // Time
   double _t;
 
@@ -22,6 +22,7 @@ public:
   // alors le compilateur en génère un implicitement.
   virtual ~TimeScheme();
   void InitialCondition();
+  void Update_Told_rhoold();
   // Enregistre la solution un fichier
   void SaveSol(Solution sol, std::string n_sol, int n);
   //void SaveSol(Eigen::VectorXd sol, std::string n_sol, int n); //à changer

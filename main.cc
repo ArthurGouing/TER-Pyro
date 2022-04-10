@@ -118,41 +118,52 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   cout << "                                                  " << ::endl;
   cout << "--------------------------------------------------" << endl;
   cout << "------------      Time Loop         --------------" << endl;
-  double dtgraph = (data_file->Get_tfinal()/10);
+  double dtgraph = (data_file->Get_tfinal()/10); //10 temps differents pour la température suivant y ??
   double cond(dtgraph);
   int compteur(0);
   for (int n = 1; n <= nb_iterations; n++) // Boucle en temps
   {
-    tn=n*dt;
-    cout << "Iteration : " << n << " Temps : " << tn << " s" << endl;
-    time_scheme->Advance();
-    time_scheme->SaveSol(time_scheme->Get_Solution(),"ImpliciteScheme", n);
-    temp = time_scheme->Get_Solution().Get_T();
-    rho  = time_scheme->Get_Solution().Get_rho();
-    Solution_tn = time_scheme->Get_Solution();
-    //Savoir comment faire ????
-    cout << mesh_adapt->NormLinf()<< " " <<data_file->Get_epsilon_adapt() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" <<endl;
-    if (maillage=="adapt")
+    if (maillage == "noadapt")
     {
-      //  Adapation de maillage suivant rho
-      ///!!!!Il faut faire une sauvegarde de Told
-      mesh_adapt->Update_Told(); //il faut mettre sol en argument
-      while (mesh_adapt->NormLinf() > data_file->Get_epsilon_adapt()) // boucle pour rafinner le maillage
+      tn=n*dt;
+      cout << "Iteration : " << n << " Temps : " << tn << " s" << endl;
+      time_scheme->Advance();
+    }
+    else if (maillage == "adapt")
+    {
+      tn=n*dt;
+      cout << "Iteration : " << n << " Temps : " << tn << " s" << endl;
+      time_scheme->Update_Told_rhoold();                                        // Il faut faire une sauvegarde de Told=Tn et rhoold=rhon (CI)
+      time_scheme->Advance();                                                   // On effectue une premiere initialisation de Tn+1 et rhon+1
+
+      //Adaptation de maillage
+      mesh_adapt->Update_Dyprevious();                                          // On sauvegarde Dy(n) pour le calcul de la norme : |Dyk(n)-Dyk+1(n)|
+      Solution_tn = time_scheme->Get_Solution();
+      mesh_adapt->Update(Solution_tn);                                          // Calcul du premier maillage adapté
+      mesh_adapt->Update_Dystar_vitesse();                                      // Calcul de Dystar et de la vitesse d'advection du maillage
+      time_scheme->Advance_ALE();                                               // Calcul de Tn+1 sur nouveau maillage
+
+      //Pour éviter absolument de faire une initialisation pour intialiser Normlinf en dehors de la boucle on peut faire poser une variable norme et la mettre à eps+1 au début
+      cout << mesh_adapt->NormLinf()<< " " <<data_file->Get_epsilon_adapt() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" <<endl;
+      while (mesh_adapt->NormLinf() > data_file->Get_epsilon_adapt())           // Boucle pour rafinner le maillage
       {
-        mesh_adapt->Update_Dyprevious(); //pour le calcul de la norme
-        mesh_adapt->Update(Solution_tn); //mesh_adapt->Update(temp);
-        //cout << "après update" << endl;
-        mesh_adapt->Update_Dystar_vitesse();
-        //cout << "après dystar" << endl;
-        time_scheme->Advance_ALE();
-        //cout << "après ale" << endl;
-        //calcul de la solution à "tn" sur le maillage "m+1" (_Dy) à partir du maillage "m" (_Dyold)
-        //à l'aide la nouvelle methode / matrice donc un nouveau advance dnas timescheme...!!!!!!!!!!!!!
+        mesh_adapt->Update_Dyprevious();                                        // On sauvegarde Dy(n) pour le calcul de la norme : |Dyk(n)-Dyk+1(n)|
+        Solution_tn = time_scheme->Get_Solution();                              // ??????????????????????????????
+        mesh_adapt->Update(Solution_tn);                                        // Calcul de Dyk+1(n)
+        mesh_adapt->Update_Dystar_vitesse();                                    // Calcul de Dystar et de la vitesse d'advection du maillage
+        time_scheme->Advance_ALE();                                             // Calcul de Tn+1 sur nouveau maillage
         cout << mesh_adapt->NormLinf()<< " " << data_file->Get_epsilon_adapt() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" <<endl;
       }
       cout << "après boucle adapt maillage" << endl;
-      mesh_adapt->Update_Dyold();//Sauvegarde du maillage CI dans le advance2 et update apres la boucle
+      mesh_adapt->Update_Dyold();                                               // Le dernier maillage de la boucle devient le Dyold pour la CI pour la nouvelle itération (Tn+2)
     }
+
+
+    // Ecriture
+    time_scheme->SaveSol(time_scheme->Get_Solution(),"ImpliciteScheme", n);
+    temp = time_scheme->Get_Solution().Get_T();                                 // Sauvegarde des vecteurs pour écriture
+    rho  = time_scheme->Get_Solution().Get_rho();
+
     for (int i = 0; i <= 4 ; i++)
     {
       templist[i] << tn << " " << temp(Nylist[i]) << endl;
@@ -161,7 +172,6 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
         rholist[i]  << tn << " " << rho(Nylist[i])  << endl;
       }
     }
-
 
     //Temperature suivant y
     if (abs(tn-cond) <= dt/2)
@@ -178,6 +188,7 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
         tempylist[compteur] << dist << " " << temp(j*Nx) << endl;
       }
     }
+
   }
   cout << "--------------------------------------------------" << endl;
 

@@ -1,6 +1,6 @@
 #ifndef _MESHADAPT_H
 
-#include "Solution.h" // En fait on en a besoin qu'à partir de timescheme
+#include "Solution.h" // En fait on en a besoin qu'à partir de timescheme !
 #include "DataFile.h"
 #include "Dense"
 #include "Sparse"
@@ -10,8 +10,12 @@
 class Mesh_Adapt
  {
  private:
-  Eigen::VectorXd _rho, _Told; // inutile ; peut être pas car on fait une référence vers sol
+  Eigen::VectorXd _rho; // inutile ; peut être pas car on fait une référence vers sol
   //Vecteur contenant les taille dy de chaques mailles
+  //_Dy=nouveau maillage dans la boucle Dyk+1(n)
+  //_Dystar=maillage intermédiaire
+  //_Dyold=maillage initiale (CI pour l'advection)
+  //_Dyprevious=maillage precedent le nouveau dans la boucle Dyk(n)
   Eigen::VectorXd _Dy,_Dystar,_Dyold, _Dyprevious;
   //Vecteur contenant les positions des "noeuds" de chaques mailles selon Y
   Eigen::VectorXd _Y,_Y1; // _Y1 pas bon défini sur le mauvais maillage
