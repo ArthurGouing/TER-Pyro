@@ -20,7 +20,7 @@ _df(data_file)
   _Dyold.resize(_df->Get_Ny());
   _Dyprevious.resize(_df->Get_Ny());
   _Y.resize(_df->Get_Ny()+1);
-  _Y1.resize(_df->Get_Ny()+1);
+  _Yold.resize(_df->Get_Ny()+1);
   _v.resize(_df->Get_Ny()+1);
   _Y(0)=0.;
   if (_df->Get_CastestnonUnif() == "oui") //ajout du cas maillage non uniforme  attention au datafile!!!!!!!
@@ -33,6 +33,7 @@ _df(data_file)
     {
       _Dy(i) =_df->Get_dy();
       _Dyold(i)=_df->Get_dy();
+      _Dyprevious(i) = _df->Get_dy();
       _Y(i+1) = _Y(i)+_df->Get_dy();
     }
   }
@@ -50,12 +51,13 @@ void Mesh_Adapt::Update(Solution & sol)//Soluiton sol en entrée
   VectorXd U2(Ny+1);
   VectorXd metric(Ny+1);
   VectorXd K(Ny);
-  _rho= sol.Get_rho(); // inutile ?
+  //_rho= sol.Get_rho(); // inutile ?
   double maxU2 =0;
   double metmax=10.0;
 
   vitesse();
-  U2=Derive_y_2(_rho)/5000; // dérivée seconde selon y en x = dx, aux noeuds du maillaage
+  //U2=Derive_y_2(_rho)/5000; // dérivée seconde selon y en x = dx, aux noeuds du maillaage
+  U2=Derive_y_2(sol.Get_T())/5000; // dérivée seconde selon y en x = dx, aux noeuds du maillaage
   for (int i=0; i<U2.size(); i++)
   {
     if (abs(U2(i))>maxU2)
@@ -70,11 +72,16 @@ void Mesh_Adapt::Update(Solution & sol)//Soluiton sol en entrée
   {
     double minimum =10;
     metric(i)= sqrt(max(abs(U2(i)),minimum));
+    metric(i) = 1;
   }
 
   for (int i=0 ; i<K.size(); i++)  //Calcul de K
   {
     K(i)=(metric(i)+metric(i+1))/2.;
+    if (K(i)==0)
+    {
+      cout<<"K=0"<< endl;
+    }
   }
 
 
@@ -110,23 +117,26 @@ void Mesh_Adapt::Update(Solution & sol)//Soluiton sol en entrée
   solver.analyzePattern(M);
   solver.factorize(M);
 
+cout <<"4"<<endl;
   Ysolv = solver.solve(b);
-
-  _Y1=_Y;   //vecteur position à l'instant avant update
-
+cout <<"5"<<endl;
+  fstream file;
+  string a="mesh.dat";
+  file.open(a, ios::out);
   for (int i=1; i<_Y.size()-1;i++) //On remplit _Y
   {
     _Y(i)=Ysolv(i-1);
+    file << _Y(i) << " " << U2(i) << endl;
   }
-
+file.close();
 
   // On détermine les _Dy a partir des nouveaux _Y calculés
   for (int i=0;i<_Dy.size();i++)
   {
     _Dy(i)= _Y(i+1)-_Y(i);
-    if (_Dy(i)==0)
+    if (_Dy(i)<=1e-16)
     {
-      cout<< "Le dy de la maille "<<i<<" vaut 0, on aura une division par 0 dans la construction des matrices"<<endl;
+      cout<< "Le dy de la maille "<<i<<" vaut tres petit, on aura une division par 0 dans la construction des matrices"<<endl;
 
     }
   }
@@ -226,7 +236,7 @@ void Mesh_Adapt::vitesse()  ///Y(i+1/2) est le milieu entre 2 noeuds
   _v(0)=0.;
   for(int i=1; i<_v.size()-1;i++)
   {
-    _v(i)=(_Y(i+1)-_Y(i))/(2*dt)-(_Y1(i+1)-_Y1(i))/(2*dt); // vi+1/2
+    _v(i)=(_Y(i+1)-_Y(i))/(2*dt)-(_Yold(i+1)-_Yold(i))/(2*dt); // vi+1/2
   }
   _v(_v.size()-1)=0.;
 }
@@ -241,6 +251,7 @@ void Mesh_Adapt::Update_Dystar_vitesse()
 void Mesh_Adapt::Update_Dyold()
 {
   _Dyold=_Dy;
+  _Yold=_Y; /////////////////////////////////////////////////////
 }
 
 void Mesh_Adapt::Update_Dyprevious()

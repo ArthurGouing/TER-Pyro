@@ -133,29 +133,31 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
     {
       tn=n*dt;
       cout << "Iteration : " << n << " Temps : " << tn << " s" << endl;
+      mesh_adapt->Update_Dyold();
       time_scheme->Update_Told_rhoold();                                        // Il faut faire une sauvegarde de Told=Tn et rhoold=rhon (CI)
       time_scheme->Advance();                                                   // On effectue une premiere initialisation de Tn+1 et rhon+1
 
       //Adaptation de maillage
-      mesh_adapt->Update_Dyprevious();                                          // On sauvegarde Dy(n) pour le calcul de la norme : |Dyk(n)-Dyk+1(n)|
-      Solution_tn = time_scheme->Get_Solution();
-      mesh_adapt->Update(Solution_tn);                                          // Calcul du premier maillage adapté
+      mesh_adapt->Update_Dyprevious();                                          // On sauvegarde Dyk(n) pour le calcul de la norme : |Dyk(n)-Dyk+1(n)|
+      cout << "1" << endl;
+      mesh_adapt->Update(time_scheme->Get_Solution());                          // Calcul du premier maillage adapté
+      cout << "2" << endl;
       mesh_adapt->Update_Dystar_vitesse();                                      // Calcul de Dystar et de la vitesse d'advection du maillage
+      cout << "3" << endl;
       time_scheme->Advance_ALE();                                               // Calcul de Tn+1 sur nouveau maillage
-
-      //Pour éviter absolument de faire une initialisation pour intialiser Normlinf en dehors de la boucle on peut faire poser une variable norme et la mettre à eps+1 au début
-      cout << mesh_adapt->NormLinf()<< " " <<data_file->Get_epsilon_adapt() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" <<endl;
-      while (mesh_adapt->NormLinf() > data_file->Get_epsilon_adapt())           // Boucle pour rafinner le maillage
-      {
-        mesh_adapt->Update_Dyprevious();                                        // On sauvegarde Dy(n) pour le calcul de la norme : |Dyk(n)-Dyk+1(n)|
-        Solution_tn = time_scheme->Get_Solution();                              // ??????????????????????????????
-        mesh_adapt->Update(Solution_tn);                                        // Calcul de Dyk+1(n)
-        mesh_adapt->Update_Dystar_vitesse();                                    // Calcul de Dystar et de la vitesse d'advection du maillage
-        time_scheme->Advance_ALE();                                             // Calcul de Tn+1 sur nouveau maillage
-        cout << mesh_adapt->NormLinf()<< " " << data_file->Get_epsilon_adapt() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" <<endl;
-      }
-      cout << "après boucle adapt maillage" << endl;
-      mesh_adapt->Update_Dyold();                                               // Le dernier maillage de la boucle devient le Dyold pour la CI pour la nouvelle itération (Tn+2)
+      mesh_adapt->Update_Dyold();                                             ////Peut etre a retiré
+    //   //Pour éviter absolument de faire une initialisation pour intialiser Normlinf en dehors de la boucle on peut faire poser une variable norme et la mettre à eps+1 au début
+    //   cout << mesh_adapt->NormLinf()<< " " <<data_file->Get_epsilon_adapt() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" <<endl;
+    //   while (mesh_adapt->NormLinf() > data_file->Get_epsilon_adapt())           // Boucle pour rafinner le maillage
+    //   {
+    //     mesh_adapt->Update_Dyprevious();                                        // On sauvegarde Dy(n) pour le calcul de la norme : |Dyk(n)-Dyk+1(n)|
+    //     mesh_adapt->Update(time_scheme->Get_Solution());                        // Calcul de Dyk+1(n)
+    //     mesh_adapt->Update_Dystar_vitesse();                                    // Calcul de Dystar et de la vitesse d'advection du maillage
+    //     time_scheme->Advance_ALE();                                             // Calcul de Tn+1 sur nouveau maillage
+    //     cout << mesh_adapt->NormLinf()<< " " << data_file->Get_epsilon_adapt() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" <<endl;
+    //   }
+    //   cout << "après boucle adapt maillage" << endl;
+    //   mesh_adapt->Update_Dyold();                                               // Le dernier maillage de la boucle devient le Dyold pour la CI pour la nouvelle itération (Tn+2)
     }
 
 

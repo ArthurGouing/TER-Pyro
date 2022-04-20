@@ -18,7 +18,7 @@ class Mesh_Adapt
   //_Dyprevious=maillage precedent le nouveau dans la boucle Dyk(n)
   Eigen::VectorXd _Dy,_Dystar,_Dyold, _Dyprevious;
   //Vecteur contenant les positions des "noeuds" de chaques mailles selon Y
-  Eigen::VectorXd _Y,_Y1; // _Y1 pas bon défini sur le mauvais maillage
+  Eigen::VectorXd _Y,_Yold; // _Y1 pas bon défini sur le mauvais maillage
   Eigen::VectorXd _v;
   //Pointeur vers le fichier de données
   DataFile* _df;
