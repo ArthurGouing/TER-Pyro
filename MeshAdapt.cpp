@@ -41,7 +41,8 @@ _df(data_file)
 
 //--------------------------------Mise à jour du maillage-----------------------
 
-void Mesh_Adapt::Update(Solution & sol)//Soluiton sol en entrée
+void Mesh_Adapt::Update(Solution & sol)
+//  Enlevé la ligne 76 pour réactiver l'adaptation de maillage
 {
 
   //Initialisation
@@ -52,7 +53,7 @@ void Mesh_Adapt::Update(Solution & sol)//Soluiton sol en entrée
   VectorXd metric(Ny+1);
   VectorXd K(Ny);
   //_rho= sol.Get_rho(); // inutile ?
-  double maxU2 =0;
+  double maxU2 =1;
   double metmax=10.0;
 
   vitesse();
@@ -72,7 +73,7 @@ void Mesh_Adapt::Update(Solution & sol)//Soluiton sol en entrée
   {
     double minimum =10;
     metric(i)= sqrt(max(abs(U2(i)),minimum));
-    metric(i) = 1;
+    metric(i) = 1; // A enlevé pour acitvé l'adapttion
   }
 
   for (int i=0 ; i<K.size(); i++)  //Calcul de K
