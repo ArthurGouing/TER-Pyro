@@ -30,7 +30,7 @@ void TimeScheme::InitialCondition()
 	double dx = _df->Get_dx();
 	double dy = _df->Get_dy();
 	double xmin = _df->Get_xmin();
-  double ymin = _df->Get_ymin();
+	double ymin = _df->Get_ymin();
 	_sol.Get_T().resize(Nx*Ny);//inutile et ne compile pas ?????
 
 	for (int j=0; j<Ny; ++j)
@@ -74,7 +74,7 @@ TimeScheme(data_file,fin_vol)
 	std::cout << "                                                  " << std::endl;
 	std::cout << "--------------------------------------------------" << std::endl;
 	std::cout << "-------- Build time implicit scheme class --------" << std::endl;
-  std::cout << "--------------------------------------------------" << std::endl;
+	std::cout << "--------------------------------------------------" << std::endl;
 }
 
 
@@ -139,83 +139,108 @@ void ImplicitEulerScheme::Advance_ALE()
 	//cout << "après _rhostar" << endl;
 	//Calcul de Tn+1
 	_fin_vol->Build_flux_mat_ALE(_solold); //Build_flux_mat_and_BC_RHS(_t);
-	_fin_vol->Build_BC_RHS_ALE(_t,_solold);   
+	_fin_vol->Build_BC_RHS_ALE(_t,_solold);
 	Eigen::VectorXd BC_RHS=_fin_vol->Get_BC_RHS();
 	SparseMatrix<double> A=_fin_vol->Get_mat_flux();
-	Eigen::VectorXd b;
-	_solver_direct.analyzePattern(A);
-	_solver_direct.factorize(A);
 
-	b=_solold.T+BC_RHS;
-	_sol.T=_solver_direct.solve(b);
-
-	//cout << "après Tn+1" << endl;
-	//Calcul de rhon+1
-	double Aref=_df->Get_Aref(), Ta=_df->Get_Ta(), rhov=_df->Get_rhov(), rhop=_df->Get_rhop();
-	Arr=_fin_vol->Get_fct()->Arrhenius(_solold.rhostar,_sol.T);
-	double B = rhov*Aref*dt/(rhov-rhop);
-	for (int i=0; i<_sol.rho.size() ;i++)
+/***************************** Pour deguguer **********************************/
+	_fin_vol->Build_flux_mat(_solold.rho,_solold.rhostar);
+	_fin_vol->Build_BC_RHS(_t,_solold.rho,_solold.rhostar);
+	Eigen::VectorXd BC_RHS_n=_fin_vol->Get_BC_RHS();
+	SparseMatrix<double> A_n=_fin_vol->Get_mat_flux();
+	float moy_1=0;
+	float moy_2=0;
+	for(int i=0; i<BC_RHS.size();i++)
 	{
-		_sol.rho(i)=(_solold.rho(i)+B*rhop*exp(-Ta/_sol.T(i)))/(1.+B*exp(-Ta/_sol.T(i)));//c'est la méthode rho(double n)
-	}
-
-	//cout << "après rhon+1" << endl;
-	// cout << "-------------------------------" << endl;
-	// cout << "_sol = " << endl;
-	//cout << A << endl;
-	//cout << "voilà b" << _t << endl;
-	//cout << b << endl;
-	// cout << "-------------------------------" << endl;
-
-}
-
-
-
-void TimeScheme::SaveSol(Solution sol, string n_sol, int n)
-{
-
-	string n_file = _df->Get_results() + "/" + n_sol + to_string(n) + ".vtk";
-	ofstream solution;
-	solution.open(n_file, ios::out);
-	int Nx(_df->Get_Nx()), Ny(_df->Get_Ny());
-	double xmin(_df->Get_xmin()), ymin(_df->Get_ymin());
-	double dx(_df->Get_dx()), dy(_df->Get_dy());
-
-	solution << "# vtk DataFile Version 3.0" << endl;
-	solution << "sol" << endl;
-	solution << "ASCII" << endl;
-	solution << "DATASET STRUCTURED_POINTS" << endl;
-	solution << "DIMENSIONS " << Nx << " " << Ny << " " << 1 << endl;
-	solution << "ORIGIN " << xmin << " " << ymin << " " << 0 << endl;
-	solution << "SPACING " << dx << " " << dy << " " << 1 << endl;;
-	solution << "POINT_DATA " << Nx*Ny << endl;
-	solution << "SCALARS sol float" << endl;
-	solution << "LOOKUP_TABLE default" << endl;
-	for(int j=0; j<Ny; ++j)
-	{
-		for(int i=0; i<Nx; ++i)
-		{
-			solution << sol.T(i+j*Nx) << " ";
+		for(int j=0; j<BC_RHS.size();j++){
+			//cout <<i<<", "<<j<<": "<<abs(A.coeff(i,j)-A_n.coeff(i,j))<<endl;
+			moy_1+=abs(A.coeff(i,j)-A_n.coeff(i,j));}
+			//cout << i<<" : "<<abs(BC_RHS(i)-BC_RHS(i))<<endl;
+			moy_2+=abs(BC_RHS(i)-BC_RHS_n(i));
 		}
-		solution << endl;
-	}
-	solution.close();
-}
+		cout << "Erreur mmoyenne de A : "<<moy_1/(BC_RHS.size()*BC_RHS.size())<<endl;
+		cout << "Erreur mmoyenne de BC_RHS : "<<moy_2/(BC_RHS.size())<<endl;
+/*
+Il y a une autre erreur dans le TimeScheme car on a le même résultat si on prend
+les matrices ALE ou les matrices normales dans le Advance_ALE, peut être juste
+une mauvaise initialisation de sol old.
+Donc les matrices ALE sont correct (peut etre pas les temres UpWind)
+************************* Fin débuguage ***************************************/
 
-void TimeScheme::Save_rho(Eigen::VectorXd rho , double t , std::string name_file)
-{
-	string n_file = name_file + to_string(t) + ".txt";
-	int Nx(_df->Get_Nx()), Ny(_df->Get_Ny());
-	double xmin(_df->Get_xmin()), ymin(_df->Get_ymin());
-	double dx(_df->Get_dx()), dy(_df->Get_dy());
-	ofstream solution_rho;
-	solution_rho.open(name_file, ios::out);
-	for (int i=0 ; i<Ny ;i++)
+		Eigen::VectorXd b;
+		_solver_direct.analyzePattern(A);
+		_solver_direct.factorize(A);
+
+		b=_solold.T+BC_RHS;
+		_sol.T=_solver_direct.solve(b);
+
+		//cout << "après Tn+1" << endl;
+		//Calcul de rhon+1
+		double Aref=_df->Get_Aref(), Ta=_df->Get_Ta(), rhov=_df->Get_rhov(), rhop=_df->Get_rhop();
+		Arr=_fin_vol->Get_fct()->Arrhenius(_solold.rhostar,_sol.T);
+		double B = rhov*Aref*dt/(rhov-rhop);
+		for (int i=0; i<_sol.rho.size() ;i++)
+		{
+			_sol.rho(i)=(_solold.rho(i)+B*rhop*exp(-Ta/_sol.T(i)))/(1.+B*exp(-Ta/_sol.T(i)));//c'est la méthode rho(double n)
+		}
+
+		//cout << "après rhon+1" << endl;
+		// cout << "-------------------------------" << endl;
+		// cout << "_sol = " << endl;
+		//cout << A << endl;
+		//cout << "voilà b" << _t << endl;
+		//cout << b << endl;
+		// cout << "-------------------------------" << endl;
+
+	}
+
+
+
+	void TimeScheme::SaveSol(Solution sol, string n_sol, int n)
 	{
-		solution_rho << i*dy << rho(i*Nx) <<endl;
-	}
-	solution_rho.close();
-}
 
-#define _TIME_SCHEME_CPP
-#endif
+		string n_file = _df->Get_results() + "/" + n_sol + to_string(n) + ".vtk";
+		ofstream solution;
+		solution.open(n_file, ios::out);
+		int Nx(_df->Get_Nx()), Ny(_df->Get_Ny());
+		double xmin(_df->Get_xmin()), ymin(_df->Get_ymin());
+		double dx(_df->Get_dx()), dy(_df->Get_dy());
+
+		solution << "# vtk DataFile Version 3.0" << endl;
+		solution << "sol" << endl;
+		solution << "ASCII" << endl;
+		solution << "DATASET STRUCTURED_POINTS" << endl;
+		solution << "DIMENSIONS " << Nx << " " << Ny << " " << 1 << endl;
+		solution << "ORIGIN " << xmin << " " << ymin << " " << 0 << endl;
+		solution << "SPACING " << dx << " " << dy << " " << 1 << endl;;
+		solution << "POINT_DATA " << Nx*Ny << endl;
+		solution << "SCALARS sol float" << endl;
+		solution << "LOOKUP_TABLE default" << endl;
+		for(int j=0; j<Ny; ++j)
+		{
+			for(int i=0; i<Nx; ++i)
+			{
+				solution << sol.T(i+j*Nx) << " ";
+			}
+			solution << endl;
+		}
+		solution.close();
+	}
+
+	void TimeScheme::Save_rho(Eigen::VectorXd rho , double t , std::string name_file)
+	{
+		string n_file = name_file + to_string(t) + ".txt";
+		int Nx(_df->Get_Nx()), Ny(_df->Get_Ny());
+		double xmin(_df->Get_xmin()), ymin(_df->Get_ymin());
+		double dx(_df->Get_dx()), dy(_df->Get_dy());
+		ofstream solution_rho;
+		solution_rho.open(name_file, ios::out);
+		for (int i=0 ; i<Ny ;i++)
+		{
+			solution_rho << i*dy << rho(i*Nx) <<endl;
+		}
+		solution_rho.close();
+	}
+
+	#define _TIME_SCHEME_CPP
+	#endif

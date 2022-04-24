@@ -27,18 +27,16 @@ public:
 
   //sous forme de vecteur
   Eigen::VectorXd Get_T(){return T;};  //le vecteur de taille Nx*Ny
-  Eigen::VectorXd Get_Ty(int i); //le vecteur de taille Ny ...
-  Eigen::VectorXd Get_Tx(int j); //le vecteur de taille Nx ...
-  void Set_T(int n, double a){T(n) = a;}
+  Eigen::VectorXd Get_Ty(int i); //le vecteur de la ieme colonne (taille Ny)
+  Eigen::VectorXd Get_Tx(int j); //le vecteur de la jieme ligne  (taille Nx)
 
   //idem avec rho
   double rho_cell(int i, int j);
   double rho_coord(double x, double y);
 
   Eigen::VectorXd Get_rho(){return rho;};
-  Eigen::VectorXd Get_rhoy(int i); //le vecteur de taille Ny ...
-  Eigen::VectorXd Get_rhox(int j); //le vecteur de taille Nx ...
-  void Set_rho(int n, double a){rho(n) = a;}
+  Eigen::VectorXd Get_rhoy(int i); //le vecteur de la ieme colonne (taille Ny)
+  Eigen::VectorXd Get_rhox(int j); //le vecteur de la jieme ligne  (taille Nx)
 
 
   //et rho* ?
@@ -46,9 +44,10 @@ public:
   double rhostar_coord(double x, double y);
 
   Eigen::VectorXd Get_rhostar(){return rhostar;};
-  Eigen::VectorXd Get_rhostary(int i); //le vecteur de taille Ny ...
-  Eigen::VectorXd Get_rhostarx(int j); //le vecteur de taille Nx ...
-  void Set_rhostar(int n, double a){rhostar(n) = a;}
+  Eigen::VectorXd Get_rhostary(int i); //le vecteur de la ieme colonne (taille Ny)
+  Eigen::VectorXd Get_rhostarx(int j); //le vecteur de la jieme ligne  (taille Nx)
+
+  bool Is_Positive();
 };
 
 #define _SOLUTION_H

@@ -190,10 +190,11 @@ void FiniteVolume::Build_flux_mat_ALE(Solution sol)
 	{
 		for (int k=1; k<=Ny-1; ++k) //on se balade suivant les arrêtes suivant une colonne
 		{
-			triplets.push_back({i+(k-1)*Nx-1,i+(k-1)*Nx-1 ,sigma(i+(k-1)*Nx-1)* 1./(Dyold(k-1)*Dystar(k-1)) });// MEME PROBLEME
-			triplets.push_back({i+(k-1)*Nx-1,i+(k)*Nx-1   ,sigma(i+(k-1)*Nx-1)*-1./(Dyold(k-1)*Dystar(k-1)) }); // -NX PAS SUUUUUR
-			triplets.push_back({i+(k)*Nx-1,  i+(k)*Nx-1   ,sigma(i+(k-1)*Nx+Nx-1)* 1./(Dyold(k)/Dystar(k)) }); // MEME PROBLEME
-			triplets.push_back({i+(k)*Nx-1,  i+(k-1)*Nx-1 ,sigma(i+(k-1)*Nx+Nx-1)*-1./(Dyold(k)/Dystar(k)) });//+NX  PAS SUUUUR
+			triplets.push_back({i+(k-1)*Nx-1,i+(k-1)*Nx-1 ,sigma(i+(k-1)*Nx-1)* 1./(Dyold(k-1)*Dystar(k-1)) });
+			triplets.push_back({i+(k-1)*Nx-1,i+(k)*Nx-1   ,sigma(i+(k-1)*Nx-1)*-1./(Dyold(k-1)*Dystar(k-1)) });
+			triplets.push_back({i+(k)*Nx-1,  i+(k)*Nx-1   ,sigma(i+(k-1)*Nx+Nx-1)* 1./(Dyold(k)*Dystar(k)) });
+			triplets.push_back({i+(k)*Nx-1,  i+(k-1)*Nx-1 ,sigma(i+(k-1)*Nx+Nx-1)*-1./(Dyold(k)*Dystar(k)) });
+
 		}
 	}
 	_mat_flux.setFromTriplets(triplets.begin(), triplets.end());
@@ -232,26 +233,26 @@ void FiniteVolume::Build_BC_RHS_ALE(const double& t, Solution sol)
 	c=_adm->Get_vitesse();
 	for (int i=0; i<=Nx-1; i++) //Première ligne
 	{
-		_BC_RHS(i)+= (1.-(sol.rhostar(i)/sol.rho(i)) * Dy(i/Nx)/Dyold(i/Nx) )*((Lm/cpv)-T0);
+		_BC_RHS(i)+= (1.-(sol.rhostar(i)/sol.rho(i)) * Dy(i/Nx)/Dyold(i/Nx) )*((Lm/cpv)-T0);//!!!!!!!!!!!!!!!! Différent du schéma écrit
 		//Terme d'UpWind
-		_BC_RHS(i)+= max(0,c((i+1)/Nx)) * (sol.T(i)-T0)-Lm/cpv  * dt/Dy(i/Nx)   /// les Vj ne sont pa défini faudra appelé la fonction upwind à la bonne itération
-		- max(0,-c((i+1)/Nx)) * (sol.T(i+Nx)-T0)-Lm/cpv* dt/Dy(i/Nx);
+		_BC_RHS(i)+= max(0,c((i+1)/Nx)) * ((sol.T(i)-T0)-Lm/cpv)  * dt/Dyold(i/Nx)
+		- max(0,-c((i+1)/Nx)) * ((sol.T(i+Nx)-T0)-Lm/cpv) * dt/Dyold(i/Nx) *(sol.rho(i+Nx)/sol.rho(i));
 	}
 	for (int i=Nx; i<=Nx*Ny-Nx-1; i++) //Lignes intermédiaires
 	{
 		_BC_RHS(i)+= (1.-(sol.rhostar(i)/sol.rho(i)) * Dy(i/Nx)/Dyold(i/Nx) )*((Lm/cpv)-T0);
 		//Terme d'UpWind
-		_BC_RHS(i)+= max(0,c((i+1)/Nx)) * (sol.T(i)-T0)-Lm/cpv  * dt/Dy(i/Nx)   /// les Vj ne sont pa défini faudra appelé la fonction upwind à la bonne itération
-		- max(0,-c((i+1)/Nx)) * (sol.T(i+Nx)-T0)-Lm/cpv* dt/Dy(i/Nx)
-		+ max(0,-c(i/Nx)) * (sol.T(i)-T0)-Lm/cpv   * dt/Dy(i/Nx)
-		- max(0,c(i/Nx)) * (sol.T(i-Nx)-T0)-Lm/cpv* dt/Dy(i/Nx);
+		_BC_RHS(i)+=max(0,c((i+1)/Nx)) * ((sol.T(i)-T0)-Lm/cpv)  * dt/Dyold(i/Nx)
+		- max(0,-c((i+1)/Nx)) * ((sol.T(i+Nx)-T0)-Lm/cpv)* dt/Dyold(i/Nx) *(sol.rho(i+Nx)/sol.rho(i))
+		+ max(0,-c(i/Nx)) * ((sol.T(i)-T0)-Lm/cpv)   * dt/Dyold(i/Nx)
+		- max(0,c(i/Nx)) * ((sol.T(i-Nx)-T0)-Lm/cpv)* dt/Dyold(i/Nx) *(sol.rho(i-Nx)/sol.rho(i));
 	}
 	for (int i=Nx*Ny-Nx; i<=Nx*Ny-1; i++) //Dernière ligne
 	{
 		_BC_RHS(i)+= (1.-(sol.rhostar(i)/sol.rho(i)) * Dy(i/Nx)/Dyold(i/Nx) )*((Lm/cpv)-T0);
 		//Terme d'UpWind
-		_BC_RHS(i)+= max(0,-c(i/Nx)) * (sol.T(i)-T0)-Lm/cpv   * dt/Dy(i/Nx)
-		- max(0,c(i/Nx)) * (sol.T(i-Nx)-T0)-Lm/cpv* dt/Dy(i/Nx);
+		_BC_RHS(i)+= max(0,-c(i/Nx)) * ((sol.T(i)-T0)-Lm/cpv)   * dt/Dy(i/Nx)
+		- max(0,c(i/Nx)) * ((sol.T(i-Nx)-T0)-Lm/cpv) * dt/Dy(i/Nx) *(sol.rho(i-Nx)/sol.rho(i));
 	}
 }
 

@@ -117,5 +117,19 @@ Eigen::VectorXd Solution::Get_rhostarx(int i)// Le vecteur de la ligne i
   return V;
 }
 
+bool Solution::Is_Positive()
+{
+  bool p = true;
+  for (int i=0; i< T.size(); i++)
+  {
+    if (T(i)<=0 || rho(i)<=0)
+    {
+      p = false;
+    }
+  }
+  return p;
+}
+
+
 #define _SOLUTION_CPP
 #endif
