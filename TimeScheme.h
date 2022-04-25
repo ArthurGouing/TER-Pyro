@@ -23,6 +23,7 @@ public:
   virtual ~TimeScheme();
   void InitialCondition();
   void Update_Told_rhoold();
+  Eigen::VectorXd advecrho();
   // Enregistre la solution un fichier
   void SaveSol(Solution sol, std::string n_sol, int n);
   //void SaveSol(Eigen::VectorXd sol, std::string n_sol, int n); //à changer

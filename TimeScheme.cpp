@@ -195,7 +195,7 @@ Donc les matrices ALE sont correct (peut etre pas les temres UpWind)
 		double B = rhov*Aref*dt/(rhov-rhop);
 		for (int i=0; i<_sol.rho.size() ;i++)
 		{
-			_sol.rho(i)=(_solold.rho(i)+B*rhop*exp(-Ta/_sol.T(i)))/(1.+B*exp(-Ta/_sol.T(i)));//c'est la méthode rho(double n)
+			_sol.rho(i)=((_Dy(i)/_Dyold(i))*_solold.rho(i)+(dt/_Dy(i))*advecrho()+B*rhop*exp(-Ta/_sol.T(i)))/(1.+B*exp(-Ta/_sol.T(i)));//c'est la méthode rho(double n)
 		}
 
 		//cout << "après rhon+1" << endl;
@@ -208,6 +208,35 @@ Donc les matrices ALE sont correct (peut etre pas les temres UpWind)
 
 	}
 
+
+	VectorXd TimeScheme::advecrho()
+	{
+		//aide
+		VectorXd advec, c; //vitesse d'advection
+		c=_adm->Get_vitesse();
+		for (int i=0; i<=Nx-1; i++) //Première ligne
+		{
+			//Terme d'UpWind
+			advec(i)+= max(0,c((i+1)/Nx)) * _solold.rho(i)
+			- max(0,-c((i+1)/Nx)) * _solold.rho(i+Nx);
+		}
+		for (int i=Nx; i<=Nx*Ny-Nx-1; i++) //Lignes intermédiaires
+		{
+			//Terme d'UpWind
+			advec(i)+=max(0,c((i+1)/Nx)) * _solold.rho(i)
+			- max(0,-c((i+1)/Nx)) * _solold.rho(i+Nx)
+			+ max(0,-c(i/Nx)) * _solold.rho(i)
+			- max(0,c(i/Nx)) * _solold.rho(i-Nx);
+		}
+		for (int i=Nx*Ny-Nx; i<=Nx*Ny-1; i++) //Dernière ligne
+		{
+			//Terme d'UpWind
+			advec(i)+= max(0,-c(i/Nx)) * _solold.rho(i)
+			- max(0,c(i/Nx)) * _solold.rho(i-Nx);
+		}
+
+		return advec;
+	}
 
 
 	void TimeScheme::SaveSol(Solution sol, string n_sol, int n)
