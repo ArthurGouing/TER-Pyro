@@ -10,8 +10,8 @@ using namespace Eigen;
 using namespace std;
 
 // Constructeur par défaut (ne pas oublier de mettre votre pointeur à 0 !!)
-TimeScheme::TimeScheme(DataFile* data_file, FiniteVolume* fin_vol) :
-_df(data_file), _fin_vol(fin_vol), _t(_df->Get_t0()), _sol(data_file), _solold(data_file)   //whattttt ???,
+TimeScheme::TimeScheme(DataFile* data_file, FiniteVolume* fin_vol, Mesh_Adapt* adm) :
+_df(data_file), _fin_vol(fin_vol), _t(_df->Get_t0()), _sol(data_file), _solold(data_file), _adm(adm)  //whattttt ???,
 {
 	InitialCondition();
 }
@@ -68,8 +68,8 @@ void TimeScheme::Update_Told_rhoold()
 }
 
 
-ImplicitEulerScheme::ImplicitEulerScheme(DataFile* data_file, FiniteVolume* fin_vol) :
-TimeScheme(data_file,fin_vol)
+ImplicitEulerScheme::ImplicitEulerScheme(DataFile* data_file, FiniteVolume* fin_vol, Mesh_Adapt* adm) :
+TimeScheme(data_file,fin_vol, adm)
 {
 	std::cout << "                                                  " << std::endl;
 	std::cout << "--------------------------------------------------" << std::endl;
@@ -146,11 +146,11 @@ void ImplicitEulerScheme::Advance_ALE(double tn)
 
 	//Calcul de _rhostar
 	Eigen::VectorXd Arr  = _fin_vol->Get_fct()->Arrhenius(_solold.rho,_solold.T);;
-	Eigen::VectorXd dy   = _adm->Get_Dy();
-	Eigen::VectorXd dyold= _adm->Get_Dyold();
+	Eigen::VectorXd Dy   = _adm->Get_Dy();
+	Eigen::VectorXd Dyold= _adm->Get_Dyold();
 	for ( int i=0; i<_solold.rhostar.size() ;i++)
 	{
-		_solold.rhostar(i)=_solold.rho(i)*(dyold(i)/dy(i)) + (dt/dy(i))*(advecrho(i)+Arr(i)*dyold(i)); // On chance F par le terme d'advection
+		_solold.rhostar(i)=_solold.rho(i)*(Dyold(i)/Dy(i)) + (dt/Dy(i))*(advecrho()(i)+Arr(i)*Dyold(i)); // On chance F par le terme d'advection
 	}
 	//cout << "après _rhostar" << endl;
 	//Calcul de Tn+1
@@ -198,7 +198,7 @@ Donc les matrices ALE sont correct (peut etre pas les temres UpWind)
 		double B = rhov*Aref*dt/(rhov-rhop);
 		for (int i=0; i<_sol.rho.size() ;i++)
 		{
-			_sol.rho(i)=((_Dy(i)/_Dyold(i))*_solold.rho(i)+(dt/_Dy(i))*advecrho()+B*rhop*exp(-Ta/_sol.T(i)))/(1.+B*exp(-Ta/_sol.T(i)));//c'est la méthode rho(double n)
+			_sol.rho(i)=((Dy(i)/Dyold(i))*_solold.rho(i)+(dt/Dy(i))*advecrho()(i)+B*rhop*exp(-Ta/_sol.T(i)))/(1.+B*exp(-Ta/_sol.T(i)));//c'est la méthode rho(double n)
 		}
 
 		//cout << "après rhon+1" << endl;
@@ -215,6 +215,8 @@ Donc les matrices ALE sont correct (peut etre pas les temres UpWind)
 	VectorXd TimeScheme::advecrho()
 	{
 		//aide
+		int Nx=_df->Get_Nx();
+		int Ny= _df->Get_Ny();
 		VectorXd advec, c; //vitesse d'advection
 		c=_adm->Get_vitesse();
 		for (int i=0; i<=Nx-1; i++) //Première ligne
@@ -286,6 +288,18 @@ Donc les matrices ALE sont correct (peut etre pas les temres UpWind)
 			solution_rho << i*dy << rho(i*Nx) <<endl;
 		}
 		solution_rho.close();
+	}
+
+	double TimeScheme::max(double a, double b)
+	{
+		if (a>b)
+		{
+			return a;
+		}
+		else
+		{
+			return b;
+		}
 	}
 
 	#define _TIME_SCHEME_CPP

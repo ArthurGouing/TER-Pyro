@@ -30,6 +30,7 @@ public:
   void SaveSol(Solution sol, std::string n_sol, int n);
   //void SaveSol(Eigen::VectorXd sol, std::string n_sol, int n); //à changer
   void Save_rho(Eigen::VectorXd rho , double t , std::string name_file);//à changer
+  double max(double a, double b);
   // Une étape du schéma en temps
   virtual void Advance(double tn) = 0;
   virtual void Advance_ALE(double tn) = 0;
@@ -47,7 +48,7 @@ class ImplicitEulerScheme : public TimeScheme
 private:
   Eigen::SparseLU<Eigen::SparseMatrix<double> > _solver_direct;
 public:
-  ImplicitEulerScheme(DataFile* data_file, FiniteVolume* fin_vol);
+  ImplicitEulerScheme(DataFile* data_file, FiniteVolume* fin_vol, Mesh_Adapt* adm);
   void Advance(double tn);
   void Advance_ALE(double tn);
 };
