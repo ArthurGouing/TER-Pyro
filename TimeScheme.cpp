@@ -143,15 +143,18 @@ void ImplicitEulerScheme::Advance_ALE(double tn)
 	double dt=_df->Get_dt();
 	_t=tn;
 
-
+	cout << "0.000"<<endl;
 	//Calcul de _rhostar
 	Eigen::VectorXd Arr  = _fin_vol->Get_fct()->Arrhenius(_solold.rho,_solold.T);;
 	Eigen::VectorXd Dy   = _adm->Get_Dy();
 	Eigen::VectorXd Dyold= _adm->Get_Dyold();
+	cout <<"debut boule"<<endl;
 	for ( int i=0; i<_solold.rhostar.size() ;i++)
 	{
 		_solold.rhostar(i)=_solold.rho(i)*(Dyold(i)/Dy(i)) + (dt/Dy(i))*(advecrho()(i)+Arr(i)*Dyold(i)); // On chance F par le terme d'advection
+		cout<< i << endl;
 	}
+	cout<<"1.1"<<endl;
 	//cout << "après _rhostar" << endl;
 	//Calcul de Tn+1
 	_fin_vol->Build_flux_mat_ALE(_solold); //Build_flux_mat_and_BC_RHS(_t);
@@ -200,6 +203,7 @@ Donc les matrices ALE sont correct (peut etre pas les temres UpWind)
 		{
 			_sol.rho(i)=((Dy(i)/Dyold(i))*_solold.rho(i)+(dt/Dy(i))*advecrho()(i)+B*rhop*exp(-Ta/_sol.T(i)))/(1.+B*exp(-Ta/_sol.T(i)));//c'est la méthode rho(double n)
 		}
+		cout <<"2.2"<<endl;
 
 		//cout << "après rhon+1" << endl;
 		// cout << "-------------------------------" << endl;
@@ -217,7 +221,7 @@ Donc les matrices ALE sont correct (peut etre pas les temres UpWind)
 		//aide
 		int Nx=_df->Get_Nx();
 		int Ny= _df->Get_Ny();
-		VectorXd advec, c; //vitesse d'advection
+		VectorXd advec(Nx*Ny), c; //vitesse d'advection
 		c=_adm->Get_vitesse();
 		for (int i=0; i<=Nx-1; i++) //Première ligne
 		{
@@ -239,7 +243,7 @@ Donc les matrices ALE sont correct (peut etre pas les temres UpWind)
 			advec(i)+= max(0,-c(i/Nx)) * _solold.rho(i)
 			- max(0,c(i/Nx)) * _solold.rho(i-Nx);
 		}
-
+		cout <<"fin adc"<<endl;
 		return advec;
 	}
 
