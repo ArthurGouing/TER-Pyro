@@ -127,15 +127,16 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
     {
       tn=n*dt;
       cout << "Iteration : " << n << " Temps : " << tn << " s" << endl;
-      time_scheme->Advance();
+      time_scheme->Advance(tn);
     }
     else if (maillage == "adapt")
     {
+      cout << "yooooooooooooo" << endl;
       tn=n*dt;
       cout << "Iteration : " << n << " Temps : " << tn << " s" << endl;
       mesh_adapt->Update_Dyold();
       time_scheme->Update_Told_rhoold();                                        // Il faut faire une sauvegarde de Told=Tn et rhoold=rhon (CI)
-      time_scheme->Advance();                                                   // On effectue une premiere initialisation de Tn+1 et rhon+1
+      time_scheme->Advance(tn);                                                   // On effectue une premiere initialisation de Tn+1 et rhon+1
 
       //Adaptation de maillage
       mesh_adapt->Update_Dyprevious();                                          // On sauvegarde Dyk(n) pour le calcul de la norme : |Dyk(n)-Dyk+1(n)|
@@ -144,7 +145,7 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
       cout << "2" << endl;
       mesh_adapt->Update_Dystar_vitesse();                                      // Calcul de Dystar et de la vitesse d'advection du maillage
       cout << "3" << endl;
-      time_scheme->Advance_ALE();                                               // Calcul de Tn+1 sur nouveau maillage
+      time_scheme->Advance_ALE(tn);                                               // Calcul de Tn+1 sur nouveau maillage
       mesh_adapt->Update_Dyold();                                             ////Peut etre a retiré
     //   //Pour éviter absolument de faire une initialisation pour intialiser Normlinf en dehors de la boucle on peut faire poser une variable norme et la mettre à eps+1 au début
     //   cout << mesh_adapt->NormLinf()<< " " <<data_file->Get_epsilon_adapt() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" <<endl;
@@ -162,6 +163,8 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
 
 
     // Ecriture
+    vector<int> Nylist(5);
+    Nylist={mesh_adapt->cellule(0.),mesh_adapt->cellule(0.001),mesh_adapt->cellule(0.002),mesh_adapt->cellule(0.003),mesh_adapt->cellule(0.004)};
     time_scheme->SaveSol(time_scheme->Get_Solution(),"ImpliciteScheme", n);
     temp = time_scheme->Get_Solution().Get_T();                                 // Sauvegarde des vecteurs pour écriture
     rho  = time_scheme->Get_Solution().Get_rho();

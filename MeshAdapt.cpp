@@ -174,7 +174,6 @@ VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T) // T de taille Nx*Ny
 int Mesh_Adapt::cellule(double distance)
 {
   int Nx=_df->Get_Nx(), Ny=_df->Get_Ny();
-  double dy = _df->Get_dy();
   int Nydist; //(Nx*(Ny-int(ceil(distance/dy)))-1);
   double sommedist = 0., sommedist2=0.;
   int i=0;

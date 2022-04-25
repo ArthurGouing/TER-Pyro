@@ -28,8 +28,8 @@ public:
   //void SaveSol(Eigen::VectorXd sol, std::string n_sol, int n); //à changer
   void Save_rho(Eigen::VectorXd rho , double t , std::string name_file);//à changer
   // Une étape du schéma en temps
-  virtual void Advance() = 0;
-  virtual void Advance_ALE() = 0;
+  virtual void Advance(double tn) = 0;
+  virtual void Advance_ALE(double tn) = 0;
   // Permet de récupérer _sol
   /*
   const Eigen::VectorXd & GetSolution() const;
@@ -45,8 +45,8 @@ private:
   Eigen::SparseLU<Eigen::SparseMatrix<double> > _solver_direct;
 public:
   ImplicitEulerScheme(DataFile* data_file, FiniteVolume* fin_vol);
-  void Advance();
-  void Advance_ALE();
+  void Advance(double tn);
+  void Advance_ALE(double tn);
 };
 
 #define _TIME_SCHEME_H

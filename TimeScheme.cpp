@@ -79,10 +79,11 @@ TimeScheme(data_file,fin_vol)
 
 
 
-void ImplicitEulerScheme::Advance()
+void ImplicitEulerScheme::Advance(double tn)
 {
 	double dt=_df->Get_dt();
-	_t=_t+dt;
+	_t=tn;
+	cout << "_t" << _t << endl;
 
 
 	//Calcul de _rhostar
@@ -99,6 +100,18 @@ void ImplicitEulerScheme::Advance()
 	Eigen::VectorXd b;
 	_solver_direct.analyzePattern(A);
 	_solver_direct.factorize(A);
+
+	//////////////////////////////DEBUG
+	// for(int i=0; i<BC_RHS.size();i++)
+	// {
+	// 	for(int j=0; j<BC_RHS.size();j++){
+	// 		cout << "A" << i<<", "<<j<<": " << A.coeff(i,j) <<endl;
+	// 		// moy_1+=abs(A.coeff(i,j)-A_n.coeff(i,j));
+	// 	}
+	// 		cout << "B" <<i<<" : "<< BC_RHS(i) <<endl;
+	// 		// moy_2+=abs(BC_RHS(i)-BC_RHS_n(i));
+	// 	}
+
 
 	b=_sol.T+BC_RHS;
 	_sol.T=_solver_direct.solve(b);
@@ -125,10 +138,10 @@ void ImplicitEulerScheme::Advance()
 
 
 
-void ImplicitEulerScheme::Advance_ALE()
+void ImplicitEulerScheme::Advance_ALE(double tn)
 {
 	double dt=_df->Get_dt();
-	_t=_t+dt;
+	_t=tn;
 
 
 	//Calcul de _rhostar
@@ -144,22 +157,23 @@ void ImplicitEulerScheme::Advance_ALE()
 	SparseMatrix<double> A=_fin_vol->Get_mat_flux();
 
 /***************************** Pour deguguer **********************************/
-	_fin_vol->Build_flux_mat(_solold.rho,_solold.rhostar);
-	_fin_vol->Build_BC_RHS(_t,_solold.rho,_solold.rhostar);
-	Eigen::VectorXd BC_RHS_n=_fin_vol->Get_BC_RHS();
-	SparseMatrix<double> A_n=_fin_vol->Get_mat_flux();
-	float moy_1=0;
-	float moy_2=0;
-	for(int i=0; i<BC_RHS.size();i++)
-	{
-		for(int j=0; j<BC_RHS.size();j++){
-			//cout <<i<<", "<<j<<": "<<abs(A.coeff(i,j)-A_n.coeff(i,j))<<endl;
-			moy_1+=abs(A.coeff(i,j)-A_n.coeff(i,j));}
-			//cout << i<<" : "<<abs(BC_RHS(i)-BC_RHS(i))<<endl;
-			moy_2+=abs(BC_RHS(i)-BC_RHS_n(i));
-		}
-		cout << "Erreur mmoyenne de A : "<<moy_1/(BC_RHS.size()*BC_RHS.size())<<endl;
-		cout << "Erreur mmoyenne de BC_RHS : "<<moy_2/(BC_RHS.size())<<endl;
+	// _fin_vol->Build_flux_mat(_solold.rho,_solold.rhostar);
+	// _fin_vol->Build_BC_RHS(_t,_solold.rho,_solold.rhostar);
+	// Eigen::VectorXd BC_RHS_n=_fin_vol->Get_BC_RHS();
+	// SparseMatrix<double> A_n=_fin_vol->Get_mat_flux();
+	// float moy_1=0;
+	// float moy_2=0;
+	// for(int i=0; i<BC_RHS.size();i++)
+	// {
+	// 	for(int j=0; j<BC_RHS.size();j++){
+	// 		cout <<"A" << i<<", "<<j<<": " << A.coeff(i,j) << " " << A_n.coeff(i,j)<<endl;
+	// 		// moy_1+=abs(A.coeff(i,j)-A_n.coeff(i,j));
+	// 	}
+	// 		cout << "B" <<i<<" : "<< BC_RHS(i) << " " << BC_RHS_n(i)<<endl;
+	// 		// moy_2+=abs(BC_RHS(i)-BC_RHS_n(i));
+	// 	}
+		// cout << "Erreur mmoyenne de A : "<<moy_1/(BC_RHS.size()*BC_RHS.size())<<endl;
+		// cout << "Erreur mmoyenne de BC_RHS : "<<moy_2/(BC_RHS.size())<<endl;
 /*
 Il y a une autre erreur dans le TimeScheme car on a le même résultat si on prend
 les matrices ALE ou les matrices normales dans le Advance_ALE, peut être juste

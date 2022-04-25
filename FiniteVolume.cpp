@@ -113,12 +113,14 @@ void FiniteVolume::Build_BC_RHS(const double& t, VectorXd rho, VectorXd rhostar)
 	for (int i=Nx*Ny-Nx; i<=Nx*Ny-1; i++)
 	{
 		_BC_RHS(i)=(dt*lambdapv/(rho(i)*cpv*Dy(Dy.size()-1)))*_fct->SourceFunction(t);
+	//	cout << "Debug second membre partie non pyro " << "B" << i << " "<< dt << " " << lambdapv << " "  << rho(i) << " "  << cpv<< " "  <<Dy(Dy.size()-1) << " "  << _fct->SourceFunction(t) << endl;
 	}
 
 	//Partie pyro
 	for (int i=0; i<=Nx*Ny-1; i++)
 	{
 		_BC_RHS(i)+=(1.-(rhostar(i)/rho(i)))*((Lm/cpv)-T0);
+		//cout << "Debug second membre partie pyro " << "B" << i << " "<< _BC_RHS(i) << endl;
 	}
 
 	// cout << "-------------------------------" << endl;
