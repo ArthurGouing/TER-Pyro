@@ -145,10 +145,13 @@ void ImplicitEulerScheme::Advance_ALE(double tn)
 
 
 	//Calcul de _rhostar
-	Eigen::VectorXd Arr;
-	Arr=_fin_vol->Get_fct()->Arrhenius(_solold.rho,_solold.T);
-	_solold.rhostar=_solold.rho+dt*Arr; // ne compile pas ?, il faut une fonction set ???
-
+	Eigen::VectorXd Arr  = _fin_vol->Get_fct()->Arrhenius(_solold.rho,_solold.T);;
+	Eigen::VectorXd dy   = _adm->Get_Dy();
+	Eigen::VectorXd dyold= _adm->Get_Dyold();
+	for ( int i=0; i<_solold.rhostar.size() ;i++)
+	{
+		_solold.rhostar(i)=_solold.rho(i)*(dyold(i)/dy(i)) + (dt/dy(i))*(advecrho(i)+Arr(i)*dyold(i)); // On chance F par le terme d'advection
+	}
 	//cout << "après _rhostar" << endl;
 	//Calcul de Tn+1
 	_fin_vol->Build_flux_mat_ALE(_solold); //Build_flux_mat_and_BC_RHS(_t);

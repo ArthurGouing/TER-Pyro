@@ -9,6 +9,8 @@ protected:
   DataFile* _df;
   // Pointeur vers le laplacien
   FiniteVolume* _fin_vol;
+  // Pointeurs vers le Maillage
+	Mesh_Adapt* _adm;
   //Vecteur initial et vecteur solution
   //Eigen::VectorXd _sol, _rho, _rhostar;
   Solution _sol, _solold; //_soldold contient ce dont on a besoin comme CI pour faire l'adaptation de maillage
@@ -17,7 +19,7 @@ protected:
 
 public:
   // Constructeur par défaut
-  TimeScheme(DataFile* data_file, FiniteVolume* fin_vol);
+  TimeScheme(DataFile* data_file, FiniteVolume* fin_vol, Mesh_Adapt* adm);
   // Destructeur par défaut - Si la classe ne contient pas de destructeur par défaut
   // alors le compilateur en génère un implicitement.
   virtual ~TimeScheme();

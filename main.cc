@@ -26,7 +26,7 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   FiniteVolume* fin_vol = new FiniteVolume(function, data_file, mesh_adapt);
   // Pointeur vers la classe TimeScheme (discrétisation en temps=)
   TimeScheme* time_scheme = NULL;
-  time_scheme = new ImplicitEulerScheme(data_file, fin_vol);
+  time_scheme = new ImplicitEulerScheme(data_file, fin_vol, mesh_adapt);
 
   Solution Solution_tn(data_file);
   Eigen::VectorXd temp, rho;
