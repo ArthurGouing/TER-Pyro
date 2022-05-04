@@ -34,10 +34,12 @@ double Function::SourceFunction(const double t) const
 {
   if (t<=50.)
   {
+    //return 0.0;
     return 10000.*t;
   }
   else
   {
+    //return 0.0;
     return 500000.-9000.*(t-50.);
   }
 }

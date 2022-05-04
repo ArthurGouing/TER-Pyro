@@ -40,6 +40,7 @@ class Mesh_Adapt
   void Update_Dyprevious();
   void vitesse();
   const Eigen::VectorXd Get_vitesse() const {return _v;}
+  void Affichage(std::string text,Solution sol);
 };
 
 #define _MESHADAPT_H

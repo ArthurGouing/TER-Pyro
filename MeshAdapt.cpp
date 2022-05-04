@@ -54,11 +54,11 @@ void Mesh_Adapt::Update(Solution & sol)
   VectorXd K(Ny);
   //_rho= sol.Get_rho(); // inutile ?
   double maxU2 =1;
-  double metmax=10.0;
+  double metmax=15;
 
   vitesse();
   //U2=Derive_y_2(_rho)/5000; // dérivée seconde selon y en x = dx, aux noeuds du maillaage
-  U2=Derive_y_2(sol.Get_T())/5000; // dérivée seconde selon y en x = dx, aux noeuds du maillaage
+  U2=Derive_y_2(sol.Get_rho())/5000; // dérivée seconde selon y en x = dx, aux noeuds du maillaage
   for (int i=0; i<U2.size(); i++)
   {
     if (abs(U2(i))>maxU2)
@@ -71,9 +71,9 @@ void Mesh_Adapt::Update(Solution & sol)
   //calcul des coefficient de raideur ki
   for (int i=0 ; i<metric.size(); i++)  //Calcul de la métrique
   {
-    double minimum =10;
+    double minimum =1;
     metric(i)= sqrt(max(abs(U2(i)),minimum));
-    metric(i) = 1; // A enlevé pour acitvé l'adapttion
+    //metric(i) = 1; // A enlevé pour acitvé l'adapttion
   }
 
   for (int i=0 ; i<K.size(); i++)  //Calcul de K
@@ -142,6 +142,22 @@ file.close();
     }
   }
 }
+
+
+
+void Mesh_Adapt::Affichage(std::string text,Solution sol)
+{
+  fstream file;
+  string a="Mesh/mesh"+text+".dat";
+  cout <<a << endl;
+  file.open(a, ios::out);
+  for(int i=0; i<_Y.size()-1 ;i++)
+  {
+    file << _Y(i) << " "<< sol.Get_rhoy(1)(i) << endl;
+  }
+  file.close();
+}
+
 
 //--------------------------------------Dérivée seconde-------------------------
 
