@@ -25,6 +25,7 @@ void FiniteVolume::Build_flux_mat(VectorXd rho, VectorXd rhostar)
 	VectorXd Dy =_adm->Get_Dyold(), sigma(Nx*Ny); ////ON a mis Dyold
 
 
+
 	//Calcul de sigmak
 	double lambdapv=_df->Get_lambdapv(), cpv = _df->Get_cpv();
 	for (int k=0; k<Nx*Ny; ++k)
@@ -47,12 +48,14 @@ void FiniteVolume::Build_flux_mat(VectorXd rho, VectorXd rhostar)
 
 	//------------------------------ Fx, Fy ----------------------------------//
 	double Fx;
-	VectorXd Fy(Ny);
+	VectorXd Fy(Ny) , My(Ny-1);
 	Fx=1./pow(dx,2);
-	for (int i=0; i<Ny ; i++)
+	for (int i=0; i<Ny-1 ; i++)
 	{
-		Fy(i)=1./pow(Dy(i),2);
+		Fy(i)=1./Dy(i);
+		My(i)=2./(Dy(i)+Dy(i+1));
 	}
+	Fy(Ny-1)=1./Dy(Ny-1);
 
 	//------------------Id+sigma*dt*H ou Idtilde+sigmak*dt*H-------------------//
 	_mat_flux.resize(Nx*Ny,Nx*Ny);
@@ -73,10 +76,10 @@ void FiniteVolume::Build_flux_mat(VectorXd rho, VectorXd rhostar)
 	{
 		for (int k=1; k<=Ny-1; ++k) //on se balade suivant les arrêtes suivant une colonne
 		{
-			triplets.push_back({i+(k-1)*Nx-1,i+(k-1)*Nx-1,sigma(i+(k-1)*Nx-1)*Fy(k-1)});
-			triplets.push_back({i+(k-1)*Nx-1,i+(k-1)*Nx+Nx-1,sigma(i+(k-1)*Nx-1)*-Fy(k-1)});
-			triplets.push_back({i+(k-1)*Nx+Nx-1,i+(k-1)*Nx+Nx-1,sigma(i+(k-1)*Nx+Nx-1)*Fy(k)});
-			triplets.push_back({i+(k-1)*Nx+Nx-1,i+(k-1)*Nx-1,sigma(i+(k-1)*Nx+Nx-1)*-Fy(k)});
+			triplets.push_back({i+(k-1)*Nx-1,i+(k-1)*Nx-1,sigma(i+(k-1)*Nx-1)*Fy(k-1)*My(k-1)});
+			triplets.push_back({i+(k-1)*Nx-1,i+(k-1)*Nx+Nx-1,sigma(i+(k-1)*Nx-1)*-Fy(k-1)*My(k-1)});
+			triplets.push_back({i+(k-1)*Nx+Nx-1,i+(k-1)*Nx+Nx-1,sigma(i+(k-1)*Nx+Nx-1)*Fy(k)*My(k-1)});
+			triplets.push_back({i+(k-1)*Nx+Nx-1,i+(k-1)*Nx-1,sigma(i+(k-1)*Nx+Nx-1)*-Fy(k)*My(k-1)});
 		}
 	}
 	_mat_flux.setFromTriplets(triplets.begin(), triplets.end());
@@ -143,11 +146,13 @@ void FiniteVolume::Build_flux_mat_ALE(Solution sol)
 
 
 	//Calcul de sigmak
+	cout << "avant sigmak" << endl;
 	double lambdapv=_df->Get_lambdapv(), cpv = _df->Get_cpv();
 	for (int k=0; k<Nx*Ny; ++k)
 	{
 		sigma(k)=lambdapv/(sol.rho(k)*cpv);
 	}
+	cout << "après sigmak" << endl;
 
 
 	//Calcul de Idtilde, ajout de sigma dans H
@@ -157,11 +162,13 @@ void FiniteVolume::Build_flux_mat_ALE(Solution sol)
 	vector<Triplet<double>> tripletsId;
 	for (int i=0; i<Nx*Ny; ++i)
 	{
+		cout << "i=" <<i << endl;
+		cout <<  sol.rho(i)  << " " << sol.rhostar(i)<< endl;
 		tripletsId.push_back({i,i,sol.rhostar(i)/sol.rho(i)*Dy(i/Nx)/Dyold(i/Nx)}); // Verif le i/Dx
 	}
 	Idtilde.setFromTriplets(tripletsId.begin(), tripletsId.end());
 
-
+	cout << "apres Idtilde" << endl;
 	//------------------------------ Fx, Fy ----------------------------------//
 	double Fx;
 	VectorXd Fy(Ny);
@@ -176,6 +183,7 @@ void FiniteVolume::Build_flux_mat_ALE(Solution sol)
 	_mat_flux.resize(Nx*Ny,Nx*Ny);
 
 	//sigmak*H
+	cout << "avant sigmak*H" << endl;
 	for (int j=1; j<=Ny; ++j)
 	{
 		for (int k=(j-1)*Nx+1; k<=j*Nx-1; ++k) //on se balade suivant les arrêtes suivant une ligne
@@ -187,22 +195,33 @@ void FiniteVolume::Build_flux_mat_ALE(Solution sol)
 			triplets.push_back({k,  k-1,sigma(k)*-Fx  * Dystar(k/Nx)/Dyold(k/Nx)});              //coef qu'il perd et donne à k-1
 		}
 	}
-
+	cout << "avant sigmak*H2" << endl;
 	for (int i=1; i<=Nx; ++i)
 	{
 		for (int k=1; k<=Ny-1; ++k) //on se balade suivant les arrêtes suivant une colonne
 		{
-			triplets.push_back({i+(k-1)*Nx-1,i+(k-1)*Nx-1 ,sigma(i+(k-1)*Nx-1)* 1./(Dyold(k-1)*Dystar(k-1)) });
-			triplets.push_back({i+(k-1)*Nx-1,i+(k)*Nx-1   ,sigma(i+(k-1)*Nx-1)*-1./(Dyold(k-1)*Dystar(k-1)) });
-			triplets.push_back({i+(k)*Nx-1,  i+(k)*Nx-1   ,sigma(i+(k-1)*Nx+Nx-1)* 1./(Dyold(k)*Dystar(k)) });
-			triplets.push_back({i+(k)*Nx-1,  i+(k-1)*Nx-1 ,sigma(i+(k-1)*Nx+Nx-1)*-1./(Dyold(k)*Dystar(k)) });
+			// triplets.push_back({i+(k-1)*Nx-1,i+(k-1)*Nx-1 ,sigma(i+(k-1)*Nx-1)* 1./(Dyold(k-1)*Dystar(k-1)) });
+			// triplets.push_back({i+(k-1)*Nx-1,i+(k)*Nx-1   ,sigma(i+(k-1)*Nx-1)*-1./(Dyold(k-1)*Dystar(k-1)) });
+			// triplets.push_back({i+(k)*Nx-1,  i+(k)*Nx-1   ,sigma(i+(k-1)*Nx+Nx-1)* 1./(Dyold(k)*Dystar(k-1)) }); //k-1 au lieu de k ??
+			// triplets.push_back({i+(k)*Nx-1,  i+(k-1)*Nx-1 ,sigma(i+(k-1)*Nx+Nx-1)*-1./(Dyold(k)*Dystar(k-1)) }); //k-1 au lieu de k ?? et cest pas dystar
+
+			triplets.push_back({i+(k-1)*Nx-1,i+(k-1)*Nx-1 ,sigma(i+(k-1)*Nx-1)* 1./(Dyold(k-1)*(2./(Dy(k-1)+Dy(k)))) });
+			triplets.push_back({i+(k-1)*Nx-1,i+(k)*Nx-1   ,sigma(i+(k-1)*Nx-1)*-1./(Dyold(k-1)*(2./(Dy(k-1)+Dy(k)))) });
+			triplets.push_back({i+(k)*Nx-1,  i+(k)*Nx-1   ,sigma(i+(k-1)*Nx+Nx-1)* 1./(Dyold(k)*(2./(Dy(k-1)+Dy(k)))) }); //k-1 au lieu de k ??
+			triplets.push_back({i+(k)*Nx-1,  i+(k-1)*Nx-1 ,sigma(i+(k-1)*Nx+Nx-1)*-1./(Dyold(k)*(2./(Dy(k-1)+Dy(k)))) });
 
 		}
 	}
+	cout << "avant sigmak*H3" << endl;
 	_mat_flux.setFromTriplets(triplets.begin(), triplets.end());
 
 	//Idtilde + sigmak*dt*H
 	_mat_flux=Idtilde+dt*_mat_flux;
+
+	cout << "-------------------------------" << endl;
+	cout << "_mat_flux (build with triplets) = " << endl;
+	cout << _mat_flux << endl;
+	cout << "-------------------------------" << endl;
 
 }
 
@@ -256,6 +275,11 @@ void FiniteVolume::Build_BC_RHS_ALE(const double& t, Solution sol)
 		_BC_RHS(i)+= max(0,-c(i/Nx)) * ((sol.T(i)-T0)-Lm/cpv)   * dt/Dy(i/Nx)
 		- max(0,c(i/Nx)) * ((sol.T(i-Nx)-T0)-Lm/cpv) * dt/Dy(i/Nx) *(sol.rho(i-Nx)/sol.rho(i));
 	}
+
+	cout << "-------------------------------" << endl;
+	cout << "_BC_RHS = " << endl;
+	cout << _BC_RHS << endl;
+	cout << "-------------------------------" << endl;
 }
 
 double FiniteVolume::max(double a, double b)

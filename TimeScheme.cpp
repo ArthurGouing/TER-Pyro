@@ -31,7 +31,10 @@ void TimeScheme::InitialCondition()
 	double dy = _df->Get_dy();
 	double xmin = _df->Get_xmin();
 	double ymin = _df->Get_ymin();
-	_sol.Get_T().resize(Nx*Ny);//inutile et ne compile pas ?????
+	// _sol.Get_T().resize(Nx*Ny);//inutile et ne compile pas ?????
+	// _solold.Get_T().resize(Nx*Ny);
+	_sol.T.resize(Nx*Ny);//inutile et ne compile pas ?????
+	_solold.T.resize(Nx*Ny);
 
 	for (int j=0; j<Ny; ++j)
 	{
@@ -47,7 +50,10 @@ void TimeScheme::InitialCondition()
 	// cout << _sol << endl;
 	// cout << "-------------------------------" << endl;
 
-	_sol.Get_rho().resize(Nx*Ny);//inutile
+	_sol.rho.resize(Nx*Ny);//inutile
+	_solold.rho.resize(Nx*Ny);
+	_sol.rhostar.resize(Nx*Ny);//inutile
+	_solold.rhostar.resize(Nx*Ny);
 
 	//Ajout d'un vecteur masse volumique
 	for (int j=0; j<Ny; ++j)
@@ -142,20 +148,35 @@ void ImplicitEulerScheme::Advance_ALE(double tn)
 	double dt=_df->Get_dt();
 	_t=tn;
 	//Calcul de _rhostar
+	int Nx = _df->Get_Nx();
 	Eigen::VectorXd Arr  = _fin_vol->Get_fct()->Arrhenius(_solold.rho,_solold.T);;
 	Eigen::VectorXd Dy   = _adm->Get_Dy();
 	Eigen::VectorXd Dyold= _adm->Get_Dyold();
+	//Debugbegin
+	for ( int i=0; i<Dyold.size() ;i++)
+	{
+		cout << "Dyold("<<i<<")="<<Dyold(i) << endl;
+	}
+	for ( int i=0; i<Dyold.size() ;i++)
+	{
+		cout << "Dy("<<i<<")="<<Dy(i) << endl;
+	}
+	//Debugend
 	for ( int i=0; i<_solold.rhostar.size() ;i++)
 	{
-		_solold.rhostar(i)=_solold.rho(i)*(Dyold(i)/Dy(i)) + (dt/Dy(i))*(advecrho()(i)+Arr(i)*Dyold(i)); // On chance F par le terme d'advection
+		_solold.rhostar(i)=_solold.rho(i)*(Dyold(i/Nx)/Dy(i/Nx)) + (dt/Dy(i/Nx))*(advecrho()(i)+Arr(i)*Dyold(i/Nx)); // On chance F par le terme d'advection
+		cout << "i=" << i << " rhostar(i)=" << _solold.rhostar(i) << endl;
 	}
 
-	//cout << "après _rhostar" << endl;
+	cout << "après _rhostarssss" << endl;
 	//Calcul de Tn+1
 	_fin_vol->Build_flux_mat_ALE(_solold); //Build_flux_mat_and_BC_RHS(_t);
+	cout << "apres Build_flux_mat_ALE" << endl;
 	_fin_vol->Build_BC_RHS_ALE(_t,_solold);
+	cout << "avant get" << endl;
 	Eigen::VectorXd BC_RHS=_fin_vol->Get_BC_RHS();
 	SparseMatrix<double> A=_fin_vol->Get_mat_flux();
+	cout << "apres get" << endl;
 
 /***************************** Pour deguguer **********************************/
 	// _fin_vol->Build_flux_mat(_solold.rho,_solold.rhostar);
@@ -185,11 +206,11 @@ Donc les matrices ALE sont correct (peut etre pas les temres UpWind)
 		Eigen::VectorXd b;
 		_solver_direct.analyzePattern(A);
 		_solver_direct.factorize(A);
-
+		cout << "avant solver" << endl;
 		b=_solold.T+BC_RHS;
 		_sol.T=_solver_direct.solve(b);
 
-		//cout << "après Tn+1" << endl;
+		cout << "après Tn+1" << endl;
 		//Calcul de rhon+1
 
 		double Aref=_df->Get_Aref(), Ta=_df->Get_Ta(), rhov=_df->Get_rhov(), rhop=_df->Get_rhop();
@@ -197,7 +218,8 @@ Donc les matrices ALE sont correct (peut etre pas les temres UpWind)
 		double B = rhov*Aref*dt/(rhov-rhop);
 		for (int i=0; i<_sol.rho.size() ;i++)
 		{
-			_sol.rho(i)=((Dy(i)/Dyold(i))*_solold.rho(i)+(dt/Dy(i))*advecrho()(i)+B*rhop*exp(-Ta/_sol.T(i)))/(1.+B*exp(-Ta/_sol.T(i)));//c'est la méthode rho(double n)
+			_sol.rho(i)=((Dy(i/Nx)/Dyold(i/Nx))*_solold.rho(i)+(dt/Dy(i/Nx))*advecrho()(i)+B*rhop*exp(-Ta/_sol.T(i)))/(1.+B*exp(-Ta/_sol.T(i)));//c'est la méthode rho(double n)
+			cout << "i=" << i << " rhostar(i)=" << _solold.rho(i) << endl;
 		}
 
 		//cout << "après rhon+1" << endl;

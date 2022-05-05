@@ -57,11 +57,11 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   {
     string n_filetemp = data_file->Get_results() + "Temperatures_" + to_string(i)+ "mm.dat";
     templist[i].open(n_filetemp, ios::out);
-    if (data_file->Get_Aref()!=0)
-    {
+    //if (data_file->Get_Aref()!=0)
+    //{
       string n_filerho  = data_file->Get_results() + "Rho_" + to_string(i)+ "mm.dat";
       rholist[i].open(n_filerho, ios::out);
-    }
+    //}
   }
 
 
@@ -93,10 +93,10 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
   for (int i = 0; i <= 4 ; i++)
   {
     templist[i] << 0. << " " << temp(Nylist[i]) << endl;
-    if (data_file->Get_Aref()!=0.)
-    {
-      rholist[i]  << 0. << " " << rho(Nylist[i])  << endl;
-    }
+    //if (data_file->Get_Aref()!=0.)
+    //{
+      //rholist[i]  << 0. << " " << rho(Nylist[i])  << endl;
+    //}
   }
   cout << "-------------------------------------------------" << endl;
 
@@ -139,15 +139,16 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
       time_scheme->Advance(tn);                                                   // On effectue une premiere initialisation de Tn+1 et rhon+1
 
       //Adaptation de maillage
-      // mesh_adapt->Update_Dyprevious();                                          // On sauvegarde Dyk(n) pour le calcul de la norme : |Dyk(n)-Dyk+1(n)|
-      // cout << "1" << endl;
-      // mesh_adapt->Update(time_scheme->Get_Solution());                          // Calcul du premier maillage adapté
-      // cout << "2" << endl;
-      // mesh_adapt->Update_Dystar_vitesse();                                      // Calcul de Dystar et de la vitesse d'advection du maillage
-      // cout << "3" << endl;
-      // time_scheme->Advance_ALE(tn);                                               // Calcul de Tn+1 sur nouveau maillage
-      // mesh_adapt->Update_Dyold();
-      // mesh_adapt->Affichage(std::to_string(tn), time_scheme->Get_Solution());                                        ////Peut etre a retiré
+      mesh_adapt->Update_Dyprevious();                                          // On sauvegarde Dyk(n) pour le calcul de la norme : |Dyk(n)-Dyk+1(n)|
+      cout << "main1" << endl;
+      mesh_adapt->Update2(time_scheme->Get_Solution());                          // Calcul du premier maillage adapté
+      cout << "main2" << endl;
+      mesh_adapt->Update_Dystar_vitesse();                                      // Calcul de Dystar et de la vitesse d'advection du maillage
+      cout << "main3" << endl;
+      time_scheme->Advance_ALE(tn);                                               // Calcul de Tn+1 sur nouveau maillage
+      cout << "main4" << endl;
+      mesh_adapt->Update_Dyold();
+      mesh_adapt->Affichage(std::to_string(tn), time_scheme->Get_Solution());                                        ////Peut etre a retiré
 
     //   //Pour éviter absolument de faire une initialisation pour intialiser Normlinf en dehors de la boucle on peut faire poser une variable norme et la mettre à eps+1 au début
     //   cout << mesh_adapt->NormLinf()<< " " <<data_file->Get_epsilon_adapt() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" <<endl;
@@ -174,10 +175,11 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
     for (int i = 0; i <= 4 ; i++)
     {
       templist[i] << tn << " " << temp(Nylist[i]) << endl;
-      if (data_file->Get_Aref()!=0.)
-      {
+      cout << Nylist[0] << " " << Nylist[1] << " "<< Nylist[2] << " "<< Nylist[3] << " "<< Nylist[4] << endl;
+      //if (data_file->Get_Aref()!=0.)
+      //{
         rholist[i]  << tn << " " << rho(Nylist[i])  << endl;
-      }
+      //}
     }
 
     //Temperature suivant y

@@ -25,7 +25,8 @@ _df(data_file)
   _Y(0)=0.;
   if (_df->Get_CastestnonUnif() == "oui") //ajout du cas maillage non uniforme  attention au datafile!!!!!!!
   {
-    Maillage_non_uniforme();
+    _Dy=Maillage_non_uniforme();
+    _Dyold=Maillage_non_uniforme();
   }
   else
   {
@@ -120,17 +121,32 @@ void Mesh_Adapt::Update(Solution & sol)
 
 cout <<"4"<<endl;
   Ysolv = solver.solve(b);
-cout <<"5"<<endl;
+// cout <<"5"<<endl;
+//   fstream file;
+//   string a="mesh.dat";
+//   file.open(a, ios::out);
+//   for (int i=1; i<_Y.size()-1;i++) //On remplit _Y
+//   {
+//     _Y(i)=Ysolv(i-1);
+//     file << _Y(i) << " " << U2(i) << endl;
+//   }
+// file.close();
+
+  cout <<"5"<<endl;
+
+//Pour le test !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  _Dy=Maillage_non_uniforme();
   fstream file;
   string a="mesh.dat";
   file.open(a, ios::out);
   for (int i=1; i<_Y.size()-1;i++) //On remplit _Y
   {
-    _Y(i)=Ysolv(i-1);
+    //_Y(i)=Ysolv(i-1); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!vrai truc
+    _Y(i)=_Y(i-1)+_Dy(i-1); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     file << _Y(i) << " " << U2(i) << endl;
   }
-file.close();
-
+  file.close();
+  ///////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   // On détermine les _Dy a partir des nouveaux _Y calculés
   for (int i=0;i<_Dy.size();i++)
   {
@@ -143,7 +159,45 @@ file.close();
   }
 }
 
+void Mesh_Adapt::Update2(Solution & sol)
+//  Enlevé la ligne 76 pour réactiver l'adaptation de maillage
+{
 
+  //Initialisation
+  int Nx = _df->Get_Nx();
+  int Ny = _df->Get_Ny();
+  double Ly = _df->Get_ymax();
+  VectorXd U2(Ny+1);
+  VectorXd metric(Ny+1);
+  VectorXd K(Ny);
+  //_rho= sol.Get_rho(); // inutile ?
+  double maxU2 =1;
+  double metmax=15;
+
+//Pour le test !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  _Dy=Maillage_non_uniforme();
+  fstream file;
+  string a="mesh.dat";
+  file.open(a, ios::out);
+  for (int i=1; i<_Y.size()-1;i++) //On remplit _Y
+  {
+    //_Y(i)=Ysolv(i-1); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!vrai truc
+    _Y(i)=_Y(i-1)+_Dy(i-1); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    file << _Y(i) << " " << U2(i) << endl;
+  }
+  file.close();
+  ///////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  // On détermine les _Dy a partir des nouveaux _Y calculés
+  for (int i=0;i<_Dy.size();i++)
+  {
+    _Dy(i)= _Y(i+1)-_Y(i);
+    if (_Dy(i)<=1e-16)
+    {
+      cout<< "Le dy de la maille "<<i<<" vaut tres petit, on aura une division par 0 dans la construction des matrices"<<endl;
+
+    }
+  }
+}
 
 void Mesh_Adapt::Affichage(std::string text,Solution sol)
 {
@@ -151,9 +205,9 @@ void Mesh_Adapt::Affichage(std::string text,Solution sol)
   string a="Mesh/mesh"+text+".dat";
   cout <<a << endl;
   file.open(a, ios::out);
-  for(int i=0; i<_Y.size()-1 ;i++)
+  for(int i=0; i<_Y.size() ;i++)
   {
-    file << _Y(i) << " "<< sol.Get_rhoy(1)(i) << endl;
+    file << _Y(i) << " "<< 0 << endl;
   }
   file.close();
 }
@@ -213,17 +267,21 @@ int Mesh_Adapt::cellule(double distance)
 }
 
 //----------------------------------------------------------------------------
-void Mesh_Adapt::Maillage_non_uniforme() // Calcul du maillage non uniforme !!!!!!!
+Eigen::VectorXd Mesh_Adapt::Maillage_non_uniforme() // Calcul du maillage non uniforme !!!!!!!
 {
+  VectorXd Dy;
+  Dy.resize(_df->Get_Ny());
   double a , Ny=_df->Get_Ny() , dy=_df->Get_dy() , taille=Ny*dy , length(0);
   a=(taille-dy/2.*Ny)/(Ny*Ny-Ny*(Ny+1)/2.);
   for (int i=0 ; i<Ny ;  i++ )
   {
-    _Dy(i)=(Ny-i-1)*a+dy/2.;
-    cout << _Dy(i) << endl;
-    length+=_Dy(i);
+    Dy(i)=(Ny-i-1)*a+dy/2.;
+    cout << Dy(i) << endl;
+    length+=Dy(i);
   }
   cout <<"la longueur totale suivant y est " << length << endl;
+
+  return Dy;
 }
 
 //---------------------------------------------------------------------------
