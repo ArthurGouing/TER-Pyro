@@ -55,11 +55,11 @@ void Mesh_Adapt::Update(Solution & sol)
   VectorXd K(Ny);
   //_rho= sol.Get_rho(); // inutile ?
   double maxU2 =1;
+  double minimum =1;
   double metmax=15;
 
-  vitesse();
   //U2=Derive_y_2(_rho)/5000; // dérivée seconde selon y en x = dx, aux noeuds du maillaage
-  U2=Derive_y_2(sol.Get_rho())/5000; // dérivée seconde selon y en x = dx, aux noeuds du maillaage
+  U2=Derive_y_2(sol.Get_T()); // dérivée seconde selon y en x = dx, aux noeuds du maillaage
   for (int i=0; i<U2.size(); i++)
   {
     if (abs(U2(i))>maxU2)
@@ -72,7 +72,6 @@ void Mesh_Adapt::Update(Solution & sol)
   //calcul des coefficient de raideur ki
   for (int i=0 ; i<metric.size(); i++)  //Calcul de la métrique
   {
-    double minimum =1;
     metric(i)= sqrt(max(abs(U2(i)),minimum));
     //metric(i) = 1; // A enlevé pour acitvé l'adapttion
   }
@@ -119,39 +118,18 @@ void Mesh_Adapt::Update(Solution & sol)
   solver.analyzePattern(M);
   solver.factorize(M);
 
-cout <<"4"<<endl;
   Ysolv = solver.solve(b);
-// cout <<"5"<<endl;
-//   fstream file;
-//   string a="mesh.dat";
-//   file.open(a, ios::out);
-//   for (int i=1; i<_Y.size()-1;i++) //On remplit _Y
-//   {
-//     _Y(i)=Ysolv(i-1);
-//     file << _Y(i) << " " << U2(i) << endl;
-//   }
-// file.close();
-
-  cout <<"5"<<endl;
-
-//Pour le test !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  _Dy=Maillage_non_uniforme();
-  fstream file;
-  string a="mesh.dat";
-  file.open(a, ios::out);
   for (int i=1; i<_Y.size()-1;i++) //On remplit _Y
   {
-    //_Y(i)=Ysolv(i-1); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!vrai truc
-    _Y(i)=_Y(i-1)+_Dy(i-1); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    file << _Y(i) << " " << U2(i) << endl;
+    _Y(i)=Ysolv(i-1);
   }
-  file.close();
-  ///////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  cout <<"5"<<endl;
+
   // On détermine les _Dy a partir des nouveaux _Y calculés
   for (int i=0;i<_Dy.size();i++)
   {
     _Dy(i)= _Y(i+1)-_Y(i);
-    if (_Dy(i)<=1e-16)
+    if (_Dy(i)<=1e-10)
     {
       cout<< "Le dy de la maille "<<i<<" vaut tres petit, on aura une division par 0 dans la construction des matrices"<<endl;
 
@@ -199,17 +177,27 @@ void Mesh_Adapt::Update2(Solution & sol)
   }
 }
 
+
+//-------------------------------------- Affichage-------------------------
+
 void Mesh_Adapt::Affichage(std::string text,Solution sol)
 {
+  Eigen::VectorXd U2;
+  U2=Derive_y_2(sol.Get_T());
   fstream file;
+  fstream file2;
   string a="Mesh/mesh"+text+".dat";
-  cout <<a << endl;
+  string b="Mesh/Valeur_mesh"+text+".dat";
   file.open(a, ios::out);
-  for(int i=0; i<_Y.size() ;i++)
+  file2.open(b, ios::out);
+  file2<< "# i ; v ; Dy ; Dyold ; ; Y ; Yold"<<endl;
+  for(int i=0; i<_Y.size()-1 ;i++)
   {
-    file << _Y(i) << " "<< 0 << endl;
+    file << _Y(i) << " "<< U2(i) << endl;
+    file2<< i << " " << _v(i)<<" "<<_Dy(i)<<" "<<_Dyold(i)<<"    "<< _Y(i)<<" "<<_Yold(i)<<endl;
   }
   file.close();
+  file2.close();
 }
 
 
@@ -307,10 +295,12 @@ double Mesh_Adapt::NormLinf()
 void Mesh_Adapt::vitesse()  ///Y(i+1/2) est le milieu entre 2 noeuds
 {
   double dt = _df->Get_dt();
+  cout << "dt dans la vitesse : "<<dt<<endl;
   _v(0)=0.;
   for(int i=1; i<_v.size()-1;i++)
   {
-    _v(i)=(_Y(i+1)-_Y(i))/(2*dt)-(_Yold(i+1)-_Yold(i))/(2*dt); // vi+1/2
+    _v(i)=(_Y(i)-_Yold(i))/(dt); // vi+1/2
+    //_v(i)=0;
   }
   _v(_v.size()-1)=0.;
 }
@@ -325,7 +315,7 @@ void Mesh_Adapt::Update_Dystar_vitesse()
 void Mesh_Adapt::Update_Dyold()
 {
   _Dyold=_Dy;
-  _Yold=_Y; /////////////////////////////////////////////////////
+  _Yold=_Y;
 }
 
 void Mesh_Adapt::Update_Dyprevious()

@@ -131,27 +131,29 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
     }
     else if (maillage == "adapt")
     {
-      cout << "yooooooooooooo" << endl;
+      cout << "" << endl;
       tn=n*dt;
       cout << "Iteration : " << n << " Temps : " << tn << " s" << endl;
       mesh_adapt->Update_Dyold();
-      time_scheme->Update_Told_rhoold();                                        // Il faut faire une sauvegarde de Told=Tn et rhoold=rhon (CI)
+      time_scheme->Update_Told_rhoold();
+      cout << "avant le Advance normal"<<endl;                                     // Il faut faire une sauvegarde de Told=Tn et rhoold=rhon (CI)
       time_scheme->Advance(tn);                                                   // On effectue une premiere initialisation de Tn+1 et rhon+1
 
       //Adaptation de maillage
       mesh_adapt->Update_Dyprevious();                                          // On sauvegarde Dyk(n) pour le calcul de la norme : |Dyk(n)-Dyk+1(n)|
       cout << "main1" << endl;
-      mesh_adapt->Update2(time_scheme->Get_Solution());                          // Calcul du premier maillage adapté
+      mesh_adapt->Update(time_scheme->Get_Solution());                          // Calcul du premier maillage adapté
       cout << "main2" << endl;
       mesh_adapt->Update_Dystar_vitesse();                                      // Calcul de Dystar et de la vitesse d'advection du maillage
       cout << "main3" << endl;
       time_scheme->Advance_ALE(tn);                                               // Calcul de Tn+1 sur nouveau maillage
       cout << "main4" << endl;
+      mesh_adapt->Affichage("test", time_scheme->Get_Solution());                                        ////Peut etre a retiré
       mesh_adapt->Update_Dyold();
-      mesh_adapt->Affichage(std::to_string(tn), time_scheme->Get_Solution());                                        ////Peut etre a retiré
 
     //   //Pour éviter absolument de faire une initialisation pour intialiser Normlinf en dehors de la boucle on peut faire poser une variable norme et la mettre à eps+1 au début
-    //   cout << mesh_adapt->NormLinf()<< " " <<data_file->Get_epsilon_adapt() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" <<endl;
+       cout << "Norme maillage : "<<mesh_adapt->NormLinf()<< endl <<"epsilong maillage"<<data_file->Get_epsilon_adapt() << endl;
+
     //   while (mesh_adapt->NormLinf() > data_file->Get_epsilon_adapt())           // Boucle pour rafinner le maillage
     //   {
     //     mesh_adapt->Update_Dyprevious();                                        // On sauvegarde Dy(n) pour le calcul de la norme : |Dyk(n)-Dyk+1(n)|
@@ -175,7 +177,7 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
     for (int i = 0; i <= 4 ; i++)
     {
       templist[i] << tn << " " << temp(Nylist[i]) << endl;
-      cout << Nylist[0] << " " << Nylist[1] << " "<< Nylist[2] << " "<< Nylist[3] << " "<< Nylist[4] << endl;
+      //cout << Nylist[0] << " " << Nylist[1] << " "<< Nylist[2] << " "<< Nylist[3] << " "<< Nylist[4] << endl;
       //if (data_file->Get_Aref()!=0.)
       //{
         rholist[i]  << tn << " " << rho(Nylist[i])  << endl;
