@@ -26,8 +26,10 @@ class Mesh_Adapt
    //Constructeur
   Mesh_Adapt(DataFile* data_file);
   Eigen::VectorXd Maillage_non_uniforme();
+  Eigen::VectorXd Maillage_non_uniforme2();
   void Update(Solution & sol);
   void Update2(Solution & sol);
+  void Update3(Solution & sol);
   Eigen::VectorXd Derive_y_2(Eigen::VectorXd rho);
   const Eigen::VectorXd Get_Dy() const {return _Dy;};
   //Fonction numéro de cellule

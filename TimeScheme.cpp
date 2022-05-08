@@ -70,6 +70,14 @@ void TimeScheme::InitialCondition()
 void TimeScheme::Update_Told_rhoold()
 {
 	_solold.T=_sol.T;
+	// for ( int i=0; i<_solold.rhostar.size() ;i++)
+	// {
+	// 	//cout << "i=" << i << "Update rhoold(i)=" << _solold.rho(i) << endl;
+	// }
+	// for ( int i=0; i<_solold.rhostar.size() ;i++)
+	// {
+	// 	cout << "i=" << i << "Update rho(i)=" << _sol.rho(i) << endl;
+	// }
 	_solold.rho=_sol.rho;
 }
 
@@ -94,8 +102,17 @@ void ImplicitEulerScheme::Advance(double tn)
 	//Calcul de _rhostar
 	Eigen::VectorXd Arr;
 	Arr=_fin_vol->Get_fct()->Arrhenius(_sol.rho,_sol.T);
+	cout << "Debut adance normale" << endl;
+	for ( int i=0; i<_solold.rhostar.size() ;i++)
+	{
+		//cout << "i=" << i << "Advance normale rho(i)=" << _sol.rho(i) << endl;
+	}
 	_sol.rhostar=_sol.rho+dt*Arr; // ne compile pas ?, il faut une fonction set ???
-
+	cout << " adance normale rhostar" << endl;
+	for ( int i=0; i<_solold.rhostar.size() ;i++)
+	{
+		//cout << "i=" << i << "Advance normale rhostar(i)=" << _sol.rhostar(i) << endl;
+	}
 
 	//Calcul de Tn+1
 	_fin_vol->Build_flux_mat(_sol.rho,_sol.rhostar); //Build_flux_mat_and_BC_RHS(_t);
@@ -106,6 +123,15 @@ void ImplicitEulerScheme::Advance(double tn)
 	_solver_direct.analyzePattern(A);
 	_solver_direct.factorize(A);
 
+	for(int i=0; i<BC_RHS.size();i++)
+	{
+	// 	for(int j=0; j<BC_RHS.size();j++){
+	// 		cout <<"A" << i<<", "<<j<<": " << A.coeff(i,j) << " " << A_n.coeff(i,j)<<endl;
+	// 		// moy_1+=abs(A.coeff(i,j)-A_n.coeff(i,j));
+	// 	}
+	 		cout << "normalB" <<i<<" : "<< BC_RHS(i) << " " <<endl;
+	// 		// moy_2+=abs(BC_RHS(i)-BC_RHS_n(i));
+	 	}
 	//////////////////////////////DEBUG
 	// for(int i=0; i<BC_RHS.size();i++)
 	// {
@@ -120,7 +146,10 @@ void ImplicitEulerScheme::Advance(double tn)
 
 	b=_sol.T+BC_RHS;
 	_sol.T=_solver_direct.solve(b);
-
+	for (int i=0; i<_sol.rho.size() ;i++)
+	{
+		cout << "i=" << i << " Tn+1(i)=" << _sol.T(i) << endl;
+	}
 
 	//Calcul de rhon+1
 	double Aref=_df->Get_Aref(), Ta=_df->Get_Ta(), rhov=_df->Get_rhov(), rhop=_df->Get_rhop();
@@ -129,6 +158,11 @@ void ImplicitEulerScheme::Advance(double tn)
 	for (int i=0; i<_sol.rho.size() ;i++)
 	{
 		_sol.rho(i)=(_sol.rho(i)+B*rhop*exp(-Ta/_sol.T(i)))/(1.+B*exp(-Ta/_sol.T(i)));
+	}
+	//cout << " adance normale rho n+1" << endl;
+	for ( int i=0; i<_solold.rhostar.size() ;i++)
+	{
+		cout << "i=" << i << "Advance normale rho(i)=" << _sol.rho(i) << endl;
 	}
 
 
@@ -155,17 +189,18 @@ void ImplicitEulerScheme::Advance_ALE(double tn)
 	//Debugbegin
 	for ( int i=0; i<Dyold.size() ;i++)
 	{
-		cout << "Dyold("<<i<<")="<<Dyold(i) << endl;
+		//cout << "Dyold("<<i<<")="<<Dyold(i) << endl;
 	}
 	for ( int i=0; i<Dyold.size() ;i++)
 	{
-		cout << "Dy("<<i<<")="<<Dy(i) << endl;
+		//cout << "Dy("<<i<<")="<<Dy(i) << endl;
 	}
 	//Debugend
 	for ( int i=0; i<_solold.rhostar.size() ;i++)
 	{
+		//cout << "i=" << i << " rho(i)=" << _solold.rho(i) << endl;
 		_solold.rhostar(i)=_solold.rho(i)*(Dyold(i/Nx)/Dy(i/Nx)) + (dt/Dy(i/Nx))*(advecrho()(i)+Arr(i)*Dyold(i/Nx)); // On chance F par le terme d'advection
-		cout << "i=" << i << " rhostar(i)=" << _solold.rhostar(i) << endl;
+		//cout << "i=" << i << " rhostar(i)=" << _solold.rhostar(i) << endl;
 	}
 
 	cout << "après _rhostarssss" << endl;
@@ -185,15 +220,15 @@ void ImplicitEulerScheme::Advance_ALE(double tn)
 	// SparseMatrix<double> A_n=_fin_vol->Get_mat_flux();
 	// float moy_1=0;
 	// float moy_2=0;
-	// for(int i=0; i<BC_RHS.size();i++)
-	// {
+	for(int i=0; i<BC_RHS.size();i++)
+	{
 	// 	for(int j=0; j<BC_RHS.size();j++){
 	// 		cout <<"A" << i<<", "<<j<<": " << A.coeff(i,j) << " " << A_n.coeff(i,j)<<endl;
 	// 		// moy_1+=abs(A.coeff(i,j)-A_n.coeff(i,j));
 	// 	}
-	// 		cout << "B" <<i<<" : "<< BC_RHS(i) << " " << BC_RHS_n(i)<<endl;
+	 		cout << "ALEB" <<i<<" : "<< BC_RHS(i) << " " <<endl;
 	// 		// moy_2+=abs(BC_RHS(i)-BC_RHS_n(i));
-	// 	}
+	 	}
 		// cout << "Erreur mmoyenne de A : "<<moy_1/(BC_RHS.size()*BC_RHS.size())<<endl;
 		// cout << "Erreur mmoyenne de BC_RHS : "<<moy_2/(BC_RHS.size())<<endl;
 /*
@@ -209,7 +244,10 @@ Donc les matrices ALE sont correct (peut etre pas les temres UpWind)
 		cout << "avant solver" << endl;
 		b=_solold.T+BC_RHS;
 		_sol.T=_solver_direct.solve(b);
-
+		for (int i=0; i<_sol.rho.size() ;i++)
+		{
+			cout << "i=" << i << " Tn+1advec(i)=" << _sol.T(i) << endl;
+		}
 		cout << "après Tn+1" << endl;
 		//Calcul de rhon+1
 
@@ -218,8 +256,8 @@ Donc les matrices ALE sont correct (peut etre pas les temres UpWind)
 		double B = rhov*Aref*dt/(rhov-rhop);
 		for (int i=0; i<_sol.rho.size() ;i++)
 		{
-			_sol.rho(i)=((Dy(i/Nx)/Dyold(i/Nx))*_solold.rho(i)+(dt/Dy(i/Nx))*advecrho()(i)+B*rhop*exp(-Ta/_sol.T(i)))/(1.+B*exp(-Ta/_sol.T(i)));//c'est la méthode rho(double n)
-			cout << "i=" << i << " rhostar(i)=" << _solold.rho(i) << endl;
+			_sol.rho(i)=((Dyold(i/Nx)/Dy(i/Nx))*_solold.rho(i)+(dt/Dy(i/Nx))*advecrho()(i)+B*rhop*exp(-Ta/_sol.T(i)))/(1.+B*exp(-Ta/_sol.T(i)));//c'est la méthode rho(double n)
+			cout << "i=" << i << " ALE rhon+1(i)=" << _sol.rho(i) << endl;
 		}
 
 		//cout << "après rhon+1" << endl;
@@ -244,20 +282,25 @@ Donc les matrices ALE sont correct (peut etre pas les temres UpWind)
 		for (int i=0; i<=Nx-1; i++) //Première ligne
 		{
 			//Terme d'UpWind
-			advec(i)= max(0,c((i+1)/Nx)) * _solold.rho(i)
-			- max(0,-c((i+1)/Nx)) * _solold.rho(i+Nx);
+			//cout << "c("<<(i/Nx)+1<<")="<<c((i/Nx)+1) << endl;
+			advec(i)= max(0,c((i/Nx)+1)) * _solold.rho(i)
+			- max(0,-c((i/Nx)+1)) * _solold.rho(i+Nx);
+			//cout << "dans advec premiere ligne " << "advec("<<i<<")="<< advec(i) << endl;
 		}
 		for (int i=Nx; i<=Nx*Ny-Nx-1; i++) //Lignes intermédiaires
 		{
 			//Terme d'UpWind
-			advec(i)=max(0,c((i+1)/Nx)) * _solold.rho(i)
-			- max(0,-c((i+1)/Nx)) * _solold.rho(i+Nx)
+			//cout << "c("<<(i/Nx)+1<<")="<<c((i/Nx)+1) << endl;
+			//cout << "c("<<(i/Nx)<<")="<<c((i/Nx)) << endl;
+			advec(i)=max(0,c((i/Nx)+1)) * _solold.rho(i)
+			- max(0,-c((i/Nx)+1)) * _solold.rho(i+Nx)
 			+ max(0,-c(i/Nx)) * _solold.rho(i)
 			- max(0,c(i/Nx)) * _solold.rho(i-Nx);
 		}
 		for (int i=Nx*Ny-Nx; i<=Nx*Ny-1; i++) //Dernière ligne
 		{
 			//Terme d'UpWind
+			//cout << "c("<<(i/Nx)<<")="<<c((i/Nx)) << endl;
 			advec(i)= max(0,-c(i/Nx)) * _solold.rho(i)
 			- max(0,c(i/Nx)) * _solold.rho(i-Nx);
 		}
