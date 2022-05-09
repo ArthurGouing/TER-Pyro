@@ -1,0 +1,18 @@
+set xlabel "y"
+set ylabel "f(y)"
+set grid back xtics mxtics nomytics ytics
+set yrange [-0.1:1.2]
+set xrange [0:0.01]
+
+set term png
+set output 'ADM_test_Gaussienne.png'
+plot 'Mesh/rho_1.000000.dat' title "Gaussienne sur un maillage régulié" w lp ps 1.5 pt 2 lt rgb "blue", 'Mesh/derive2_1.000000.dat' title "Gaussienne aprés ADM" w lp pt 7 ps 0.85 lt rgb "red"
+
+set output 'ADM_test_rho.png'
+plot 'Mesh/rho_46.000000.dat' title "Masse volumique à t=46s" w lp pt 9, 'Mesh/rho_30.000000.dat' title "Masse volumique à t=30s" w lp pt 7
+plot 'Mesh/rho_46.000000.dat' title "Masse volumique à t=46s" w lp pt 9, 'Mesh/rho_30.000000.dat' title "Masse volumique à t=30s" w lp pt 7
+
+set yrange [800:1400]
+set ylabel "Rho (en kg/m³)"
+set output 'ADM_test_D2.png'
+plot 'Mesh/derive2_46.000000.dat' title "Derive seconde de rho à t=46s" w lp pt 9, 'Mesh/derive2_30.000000.dat' title "Derive seconde de rho à t=30s" w lp pt 7

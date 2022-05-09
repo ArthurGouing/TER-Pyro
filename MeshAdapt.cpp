@@ -54,11 +54,18 @@ void Mesh_Adapt::Update(Solution & sol)
   VectorXd K(Ny);
   //_rho= sol.Get_rho(); // inutile ?
   double maxU2 =1;
-  double metmax=15;
+  double metmax=10;
+  double minimum =0.01;
+
 
   vitesse();
   //U2=Derive_y_2(_rho)/5000; // dérivée seconde selon y en x = dx, aux noeuds du maillaage
-  U2=Derive_y_2(sol.Get_rho())/5000; // dérivée seconde selon y en x = dx, aux noeuds du maillaage
+  U2=Derive_y_2(sol.Get_rho()/500); // dérivée seconde selon y en x = dx, aux noeuds du maillaage
+
+  for (int i=0; i<U2.size() ; i++)
+  {
+    U2(i)=exp(-pow(_Y(i)-0.005,2)/2e-7);
+  }
   for (int i=0; i<U2.size(); i++)
   {
     if (abs(U2(i))>maxU2)
@@ -71,9 +78,11 @@ void Mesh_Adapt::Update(Solution & sol)
   //calcul des coefficient de raideur ki
   for (int i=0 ; i<metric.size(); i++)  //Calcul de la métrique
   {
-    double minimum =1;
     metric(i)= sqrt(max(abs(U2(i)),minimum));
-    //metric(i) = 1; // A enlevé pour acitvé l'adapttion
+    //cout << i<<" U2  ; " << U2(i) << endl;
+    if (_df->Get_scenario() == "noadapt")
+    {metric(i) = 1;} // A enlevé pour acitvé l'adapttion
+    cout<< "metrice" << metric(i) << endl;
   }
 
   for (int i=0 ; i<K.size(); i++)  //Calcul de K
@@ -91,7 +100,7 @@ void Mesh_Adapt::Update(Solution & sol)
   VectorXd b(Ny-1), Ysolv(Ny-1);
   vector<Triplet<double>> triplets;
   SparseLU<SparseMatrix<double>, COLAMDOrdering<int> > solver;
-  double coeff = 1e10;
+  double coeff = 1e12;
   b.setZero();
   b(b.size()-1)=coeff*K(K.size()-1)*Ly;
 
@@ -118,18 +127,18 @@ void Mesh_Adapt::Update(Solution & sol)
   solver.analyzePattern(M);
   solver.factorize(M);
 
-cout <<"4"<<endl;
   Ysolv = solver.solve(b);
-cout <<"5"<<endl;
   fstream file;
   string a="mesh.dat";
   file.open(a, ios::out);
+  cout << "file open : "<<file.is_open()<<endl;
+  file<< "i ; _Y(i) ; _Yold ; _Dy ; _Dyold"<<endl;
   for (int i=1; i<_Y.size()-1;i++) //On remplit _Y
   {
     _Y(i)=Ysolv(i-1);
-    file << _Y(i) << " " << U2(i) << endl;
+    file << i << " "<<_Y(i) << " " << _Yold((i))<<" "<<_Dy(i)<< " "<< _Dyold(i)<< endl;
   }
-file.close();
+  file.close();
 
   // On détermine les _Dy a partir des nouveaux _Y calculés
   for (int i=0;i<_Dy.size();i++)
@@ -147,15 +156,81 @@ file.close();
 
 void Mesh_Adapt::Affichage(std::string text,Solution sol)
 {
+  Eigen::VectorXd U2;
+  U2=Derive_y_2(sol.Get_rho()); // dérivée seconde selon y en x = dx, aux noeuds du maillaage
+  int Ny = _df->Get_Ny();
   fstream file;
-  string a="Mesh/mesh"+text+".dat";
-  cout <<a << endl;
+  fstream file1;
+  string a="Mesh/rho_"+text+".dat";
+  string b="Mesh/derive2_"+text+".dat";
   file.open(a, ios::out);
-  for(int i=0; i<_Y.size()-1 ;i++)
+
+  file1.open(b, ios::out);
+
+  for (int i=0; i<U2.size() ; i++)
   {
-    file << _Y(i) << " "<< sol.Get_rhoy(1)(i) << endl;
+    U2(i)=exp(-pow(_Y(i)-0.005,2)/2e-7);
   }
-  file.close();
+
+  for(int i=0; i<_Y.size() ;i++)
+  {
+  //   cout <<_Y(i)<< endl;
+  //   cout << sol.Get_rhoy(0)(i) << e0ndl;
+  U2(i)=exp(-pow(_Y(i)-0.005,2)/2e-7);
+  file1 << _Y(i) << " " << U2(i) << endl;
+  U2(i)=exp(-pow(_Yold(i)-0.005,2)/2e-7);
+  file << _Yold(i) <<" "<< U2(i) << endl;
+}
+file1 << _Y(_Y.size()-1) << " " << U2(_Y.size()-1) << endl;
+
+for (int i=0; i<Ny+1 ; i++)
+{
+  // cout << endl<<"itération: "<<i<<" sur "<<Ny<<endl;
+  int i_rho=-1;
+  for (int k=0 ; k<_Dy.size()-1 ; k++)
+  {
+
+    if ( (_Y(i)>_Yold(k)+_Dyold(k)/2)&&(_Y(i)<_Yold(k+1)+_Dyold(k+1)/2) )
+    {
+      // cout <<_Yold(k+1)<< " et "<< _Dyold(k+1)<<endl;
+      // cout <<_Yold(k)+_Dyold(k)/2<<"<"<<_Y(i)<<"<"<<_Yold(k+1)+_Dyold(k+1)/2<<endl;
+      i_rho=k;
+      // cout << i_rho<<endl;
+    }
+    //cout << k <<" "<<"taille de Dy : " <<_Dy.size()-2<<endl;
+  }
+  if (_Y(i)<_Yold(0)+_Dyold(0)/2)
+  {
+    file << _Y(i) << " " << sol.Get_rhoy(0)(0)<<endl;
+    i_rho = i_rho-1;
+    // cout << "test" << endl;
+  }
+  else if (_Y(i)>_Yold(_Y.size()-2)+_Dyold(_Y.size()-2)/2)
+  {
+    file << _Y(i) << " " << sol.Get_rhoy(0)(_Y.size()-2)<<endl;
+    i_rho = i_rho-1;
+    // cout << "test1" << endl;
+
+  }
+  else if (i_rho>=0) // != de 0 ou -1
+  {
+    double a=_Yold(i_rho)+_Dyold(i_rho)/2;
+    double b=_Yold(i_rho+1)+_Dyold(i_rho+1)/2;
+    double c=_Y(i);
+    // cout << "On a i_rho : "<<i_rho<<endl;
+    // cout << "rho(i_rho) : " << sol.Get_rhoy(0)(i_rho)<< " "<< "rho(i_rho+1) : " << sol.Get_rhoy(0)(i_rho+1)<<endl;
+    // cout << "le rho sur _Y(i) : "<< ((b-c)*sol.Get_rhoy(0)(i_rho) + (c-a)*sol.Get_rhoy(0)(i_rho+1))/(b-a) <<endl;
+    // cout << "le dx de la formule : "<< (c-a) <<endl;
+     file<< _Y(i) << " "<< ((b-c)*sol.Get_rhoy(0)(i_rho) + (c-a)*sol.Get_rhoy(0)(i_rho+1))/(b-a) <<endl;//
+  }
+  else
+  {
+    cout <<i_rho<<endl;
+    cout <<"Il y a une couille quelques parts !"<<endl;
+  }
+}
+file.close();
+file1.close();
 }
 
 
@@ -167,6 +242,12 @@ VectorXd Mesh_Adapt:: Derive_y_2(VectorXd T) // T de taille Nx*Ny
   int Ny = _df->Get_Ny();
   int Nx = _df->Get_Nx();
   VectorXd derive2 (_Dy.size()+1);
+
+  for (int i=0; i<_Dy.size();i++)
+  {
+    _Dy(i)=_df->Get_dy();
+  }
+
   for (int i=2;i<derive2.size()-2; i++) //Cas général
   {
     double Tim1 = T[(i-1)*Nx];
@@ -267,11 +348,16 @@ void Mesh_Adapt::Update_Dystar_vitesse()
 void Mesh_Adapt::Update_Dyold()
 {
   _Dyold=_Dy;
-  _Yold=_Y; /////////////////////////////////////////////////////
+  for (int i=0 ; i<_Yold.size() ; i++)
+  {
+    _Yold(i)=i*_df->Get_dy();
+  }
+    //_Yold=_Y; /////////////////////////////////////////////////////
 }
 
 void Mesh_Adapt::Update_Dyprevious()
 {
+  _Dy = _Dyold;
   _Dyprevious=_Dy;
 }
 
