@@ -141,23 +141,23 @@ int main(int argc, char** argv) // ./laplacian dataSmallCase.toml -> argc=2 et a
 
       //Adaptation de maillage
       mesh_adapt->Update_Dyprevious();                                          // On sauvegarde Dyk(n) pour le calcul de la norme : |Dyk(n)-Dyk+1(n)|
-      // cout << "main1" << endl;
-      if(n%2==1)
-      {
-        mesh_adapt->Update2(time_scheme->Get_Solution());                          // Calcul du premier maillage adapté
-      }
-      else
-      {
-        mesh_adapt->Update3(time_scheme->Get_Solution());                          // Calcul du premier maillage adapté
-      }
-      //mesh_adapt->Update(time_scheme->Get_Solution());
+      cout << "main1" << endl;
+      // if(n%2==1)
+      // {
+      //  mesh_adapt->Update2(time_scheme->Get_Solution());                          // Calcul du premier maillage adapté
+      // }
+      // else
+      // {
+      //   mesh_adapt->Update3(time_scheme->Get_Solution());                          // Calcul du premier maillage adapté
+      // }
+      mesh_adapt->Update(time_scheme->Get_Solution());
       // cout << "main2" << endl;
       mesh_adapt->Update_Dystar_vitesse();                                      // Calcul de Dystar et de la vitesse d'advection du maillage
       // cout << "main3" << endl;
       time_scheme->Advance_ALE(tn);                                               // Calcul de Tn+1 sur nouveau maillage
       // cout << "main4" << endl;
       mesh_adapt->Update_Dyold();
-      //mesh_adapt->Affichage(std::to_string(tn), time_scheme->Get_Solution());                                        ////Peut etre a retiré
+      mesh_adapt->Affichage(std::to_string(tn), time_scheme->Get_Solution());                                        ////Peut etre a retiré
 
     //   //Pour éviter absolument de faire une initialisation pour intialiser Normlinf en dehors de la boucle on peut faire poser une variable norme et la mettre à eps+1 au début
     //   cout << mesh_adapt->NormLinf()<< " " <<data_file->Get_epsilon_adapt() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" <<endl;
