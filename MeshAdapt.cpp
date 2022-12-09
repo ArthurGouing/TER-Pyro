@@ -43,7 +43,6 @@ _df(data_file)
 //--------------------------------Mise à jour du maillage-----------------------
 
 void Mesh_Adapt::Update(Solution & sol)
-//  Enlevé la ligne 76 pour réactiver l'adaptation de maillage
 {
 
   //Initialisation
@@ -53,12 +52,10 @@ void Mesh_Adapt::Update(Solution & sol)
   VectorXd U2(Ny+1);
   VectorXd metric(Ny+1);
   VectorXd K(Ny);
-  //_rho= sol.Get_rho(); // inutile ?
   double maxU2 =1;
   double metmax=15;
 
   vitesse();
-  //U2=Derive_y_2(_rho)/5000; // dérivée seconde selon y en x = dx, aux noeuds du maillaage
   U2=Derive_y_2(sol.Get_rho())/5000; // dérivée seconde selon y en x = dx, aux noeuds du maillaage
   for (int i=0; i<U2.size(); i++)
   {
@@ -74,7 +71,6 @@ void Mesh_Adapt::Update(Solution & sol)
   {
     double minimum =1;
     metric(i)= sqrt(max(abs(U2(i)),minimum));
-    //metric(i) = 1; // A enlevé pour acitvé l'adapttion
   }
 
   for (int i=0 ; i<K.size(); i++)  //Calcul de K
@@ -119,37 +115,21 @@ void Mesh_Adapt::Update(Solution & sol)
   solver.analyzePattern(M);
   solver.factorize(M);
 
-cout <<"4"<<endl;
   Ysolv = solver.solve(b);
 
-  cout <<"5"<<endl;
-
-//Pour le test !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  _Dy=Maillage_non_uniforme();
-  fstream file;
-  string a="mesh.dat";
-  file.open(a, ios::out);
-  for (int i=1; i<_Y.size()-1;i++) //On remplit _Y
-  {
-    _Y(i)=Ysolv(i-1); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!vrai truc
-    file << _Y(i) << " " << U2(i) << endl;
-  }
-  file.close();
-  ///////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   // On détermine les _Dy a partir des nouveaux _Y calculés
   for (int i=0;i<_Dy.size();i++)
   {
     _Dy(i)= _Y(i+1)-_Y(i);
     if (_Dy(i)<=1e-16)
     {
-      cout<< "Le dy de la maille "<<i<<" vaut tres petit, on aura une division par 0 dans la construction des matrices"<<endl;
+      cout<< "Le dy de la maille "<<i<<" est tres petit, on aura une division par 0 dans la construction des matrices"<<endl;
 
     }
   }
 }
 
 void Mesh_Adapt::Update2(Solution & sol)
-//  Enlevé la ligne 76 pour réactiver l'adaptation de maillage
 {
 
   //Initialisation
@@ -159,23 +139,19 @@ void Mesh_Adapt::Update2(Solution & sol)
   VectorXd U2(Ny+1);
   VectorXd metric(Ny+1);
   VectorXd K(Ny);
-  //_rho= sol.Get_rho(); // inutile ?
   double maxU2 =1;
   double metmax=15;
 
-//Pour le test !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   _Dy=Maillage_non_uniforme();
   fstream file;
   string a="mesh.dat";
   file.open(a, ios::out);
   for (int i=1; i<_Y.size()-1;i++) //On remplit _Y
   {
-    //_Y(i)=Ysolv(i-1); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!vrai truc
-    _Y(i)=_Y(i-1)+_Dy(i-1); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    _Y(i)=_Y(i-1)+_Dy(i-1);
     file << _Y(i) << " " << U2(i) << endl;
   }
   file.close();
-  ///////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   // On détermine les _Dy a partir des nouveaux _Y calculés
   for (int i=0;i<_Dy.size();i++)
   {
@@ -188,45 +164,6 @@ void Mesh_Adapt::Update2(Solution & sol)
   }
 }
 
-void Mesh_Adapt::Update3(Solution & sol)
-//  Enlevé la ligne 76 pour réactiver l'adaptation de maillage
-{
-
-  //Initialisation
-  int Nx = _df->Get_Nx();
-  int Ny = _df->Get_Ny();
-  double Ly = _df->Get_ymax();
-  VectorXd U2(Ny+1);
-  VectorXd metric(Ny+1);
-  VectorXd K(Ny);
-  //_rho= sol.Get_rho(); // inutile ?
-  double maxU2 =1;
-  double metmax=15;
-
-//Pour le test !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  _Dy=Maillage_non_uniforme2();
-  fstream file;
-  string a="mesh.dat";
-  file.open(a, ios::out);
-  for (int i=1; i<_Y.size()-1;i++) //On remplit _Y
-  {
-    //_Y(i)=Ysolv(i-1); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!vrai truc
-    _Y(i)=_Y(i-1)+_Dy(i-1); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    file << _Y(i) << " " << U2(i) << endl;
-  }
-  file.close();
-  ///////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  // On détermine les _Dy a partir des nouveaux _Y calculés
-  for (int i=0;i<_Dy.size();i++)
-  {
-    _Dy(i)= _Y(i+1)-_Y(i);
-    if (_Dy(i)<=1e-16)
-    {
-      cout<< "Le dy de la maille "<<i<<" vaut tres petit, on aura une division par 0 dans la construction des matrices"<<endl;
-
-    }
-  }
-}
 
 void Mesh_Adapt::Affichage(std::string text,Solution sol)
 {
@@ -314,22 +251,21 @@ Eigen::VectorXd Mesh_Adapt::Maillage_non_uniforme() // Calcul du maillage non un
 }
 
 
-Eigen::VectorXd Mesh_Adapt::Maillage_non_uniforme2() // Calcul du maillage non uniforme !!!!!!!
-{
-  VectorXd Dy;
-  Dy.resize(_df->Get_Ny());
-  double a , Ny=_df->Get_Ny() , dy=_df->Get_dy() , taille=Ny*dy , length(0);
-  a=(taille-dy/2.*Ny)/(Ny*Ny-Ny*(Ny+1)/2.);
-  for (int i=0 ; i<Ny ;  i++ )
-  {
-    Dy(Ny-1-i)=(Ny-i-1)*a+dy/2.;
-    cout << Dy(Ny-1-i) << endl;
-    length+=Dy(Ny-1-i);
-  }
-  cout <<"la longueur totale suivant y est " << length << endl;
-
-  return Dy;
-}
+//Eigen::VectorXd Mesh_Adapt::Maillage_non_uniforme2() // Calcul du maillage non uniforme !!!!!!!
+//{
+//  VectorXd Dy;
+//  Dy.resize(_df->Get_Ny());
+//  double a , Ny=_df->Get_Ny() , dy=_df->Get_dy() , taille=Ny*dy , length(0);
+//  a=(taille-dy/2.*Ny)/(Ny*Ny-Ny*(Ny+1)/2.);
+//  for (int i=0 ; i<Ny ;  i++ )
+//  {
+//    Dy(Ny-1-i)=(Ny-i-1)*a+dy/2.;
+//    length+=Dy(Ny-1-i);
+//  }
+//  cout <<"la longueur totale suivant y est " << length << endl;
+//
+//  return Dy;
+//}
 
 //---------------------------------------------------------------------------
 void Mesh_Adapt::Maillage_Dystar()
@@ -358,9 +294,6 @@ void Mesh_Adapt::vitesse()  ///Y(i+1/2) est le milieu entre 2 noeuds
   for(int i=1; i<_v.size()-1;i++)
   {
     _v(i)=(_Y(i)-_Yold(i))/dt; // vi+1/2
-    // cout << "_Y("<<i<<")="<< _Y(i) << endl;
-    // cout << "_Yold("<<i<<")="<< _Yold(i) << endl;
-    // cout << "_v("<<i<<")="<<_v(i) << endl;
   }
   _v(_v.size()-1)=0.;
 }
@@ -375,13 +308,7 @@ void Mesh_Adapt::Update_Dystar_vitesse()
 void Mesh_Adapt::Update_Dyold()
 {
   _Dyold=_Dy;
-  /////Debug
-  cout << "Update de _Dyold"<< endl;
-  for(int i=0; i<_Dyold.size(); i++)
-  {
-    cout << "_Dyold(" << i << ")=" << _Dyold(i) << endl;
-  }
-  _Yold=_Y; /////////////////////////////////////////////////////
+  _Yold=_Y;
 }
 
 void Mesh_Adapt::Update_Dyprevious()
